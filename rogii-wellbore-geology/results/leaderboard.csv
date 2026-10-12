@@ -1,0 +1,3 @@
+submission,description,oof_rmse_folds2to5,oof_rmse_all_folds,public_rmse,private_rmse
+rogii-grid-unet-a (v2),3-width grid U-Net snapshot blend,13.270,13.453,12.008,12.180
+rogii-grid-unet-b (v2),3-width blend + LightGBM margin,13.070,13.296,11.622,11.980
