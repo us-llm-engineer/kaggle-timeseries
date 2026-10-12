@@ -7,6 +7,7 @@ figures, and its own detailed README.
 | --- | --- | --- | --- |
 | [`rogii-wellbore-geology/`](rogii-wellbore-geology/) | [ROGII Wellbore Geology Prediction](https://www.kaggle.com/competitions/rogii-wellbore-geology-prediction) (2026) | Predict the stratigraphic depth (TVT) of a horizontal well beyond the last interpreted point, from gamma ray, trajectory and a vertical type well | **RMSE 11.622 public / 11.980 private (ft)** |
 | [`enefit-prosumer-energy/`](enefit-prosumer-energy/) | [Enefit - Predict Energy Behavior of Prosumers](https://www.kaggle.com/competitions/predict-energy-behavior-of-prosumers) (2023-24) | Day-ahead hourly solar production and consumption of 69 prosumer segments, from weather forecasts, capacity and a two-day-delayed target history | **MAE 56.6 kWh back-test** (not scored on Kaggle) |
+| [`optiver-realized-volatility/`](optiver-realized-volatility/) | [Optiver Realized Volatility Prediction](https://www.kaggle.com/competitions/optiver-realized-volatility-prediction) (2021-22) | Realised volatility of the next ten minutes of 112 stocks, from one-second order-book and trade data of the current window | **RMSPE 0.2057 local report**; Kaggle private 0.24597 (late submission; the public column shows an implausible 0.0, see below) |
 
 ---
 
@@ -398,6 +399,143 @@ competition data is not redistributed here.
 4. G. Ke, Q. Meng, T. Finley, T. Wang et al. *LightGBM: A Highly Efficient Gradient Boosting Decision Tree.* NeurIPS 2017.
 
 Others that were studied are listed in [`enefit-prosumer-energy/REFERENCES.md`](enefit-prosumer-energy/REFERENCES.md).
+
+## Optiver realized volatility: cross-stock features with a CNN, a set transformer and a blend
+
+### The problem
+
+For 112 stocks and about 3,830 ten-minute windows the data has the top two levels of the order book and the executed
+trades at one-second resolution. The label is the realised volatility of the **next** ten minutes. The score is the root
+mean square **percentage** error, so relative errors on small labels count as much as on large ones. Four facts shape
+every model here:
+
+- the plain realised volatility of the current window is already strong (correlation 0.911 with the log label, RMSPE
+  0.2858 after one fitted constant);
+- the book is sparse (median 388 of 600 seconds), which is why noise-robust estimators were expected to help;
+- a window's cross-stock mean explains 55.6 % of the log-label variance: all stocks share a market factor;
+- window ids are shuffled, so there is no temporal order to use or to validate on.
+
+### Disclaimer on compute and on the result
+
+> Everything ran on **low-tier hardware**: features, ridge and LightGBM on an **8-core CPU sandbox** in 205 s, and the
+> neural networks on **one NVIDIA L4** (12 vCPUs) in 439 s for the build plus six training processes. The networks have
+> 265 k (CNN) and 417 k (set transformer) parameters.
+>
+> The numbers below are **local report-role results** on a random split of the shuffled windows. The late Kaggle
+> submission shows a **public score of 0.0, which is not credible** (see below), and a **private score of 0.24597**,
+> worse than the local 0.2057.
+
+### Results
+
+| Model | What it is | Report RMSPE |
+| --- | --- | --- |
+| plain volatility, one constant | baseline (all labelled rows) | 0.2858 |
+| V1 | ridge on log target, plain volatility features | 0.2432 |
+| V1 + estimators | the same plus pre-averaging estimators | 0.2431 |
+| V2 per-stock | LightGBM, per-stock features | 0.2384 |
+| V2 cross-stock | LightGBM plus same-window cross-stock aggregates | 0.2219 |
+| V3 | 1-D CNN on the 120 x 13 tensor + features, 3 seeds | 0.2073 |
+| V4 | transformer over the stocks of one window, 3 seeds | 0.2074 |
+| blend | V2 0.1 + V3 0.4 + V4 0.5 (weights chosen on the *choose* role) | **0.2057** |
+
+Fit 70 % / choose 15 % / report 15 % of the `time_id`s, report role of 62,491 windows. Sources:
+[`results/metrics.csv`](optiver-realized-volatility/results/metrics.csv), [`results/cpu/`](optiver-realized-volatility/results/cpu/),
+[`results/gpu/`](optiver-realized-volatility/results/gpu/).
+
+### The scorer's 0.0
+
+The competition has closed and the blend was submitted late as a code-competition notebook. The notebook first reproduced
+the local numbers on the mounted training files (report 0.2057), so the weights and features arrived intact. The scorer
+then displays:
+
+| Column | Value |
+| --- | --- |
+| Public score | **0.00000** ("perfect score"; would beat the best benchmark of 0.19548 quoted by the repository owner) |
+| Private score | 0.24597 |
+| Local report RMSPE | 0.2057 |
+
+An RMSPE of exactly zero would mean every prediction equals its target, which a volatility forecast cannot do, and the same
+listing shows 0.24597 for the same file. The 0.0 is treated here as a scorer artefact of unknown cause (the public test
+file is a three-row stub), not as a result. The private score is the one that measures the forecasting period, and it does
+not beat the benchmark. Details and untested explanations of the gap:
+[`optiver-realized-volatility/README.md`](optiver-realized-volatility/README.md#kaggle-scoring).
+
+### Experiment notes
+
+- The noise-robust (pre-averaging) estimators added nothing over plain realised volatility (0.2431 against 0.2432): the
+  windows hold a few hundred observations, far from the sample sizes the estimator theory is built for.
+- The same-window cross-stock aggregates were the clear gain in LightGBM (0.2384 to 0.2219).
+- The first estimator implementation had a wrong constant; a simulation with known noise exposed it and a test now guards it.
+  The dependent-noise second step was too unstable on windows this short and the i.i.d. second step is used.
+
+Full table, defects and the feature list: [`optiver-realized-volatility/README.md`](optiver-realized-volatility/README.md#experiment-notes).
+
+### Methodologies
+
+The four model families, the roles and the loss are described in
+[`optiver-realized-volatility/README.md`](optiver-realized-volatility/README.md#the-four-methodologies).
+
+### Visualizations
+
+Every figure is regenerated by `python scripts/make_figures.py` from the files in
+[`optiver-realized-volatility/results/`](optiver-realized-volatility/results/).
+
+#### During training
+
+<table>
+<tr><td colspan="2"><img src="optiver-realized-volatility/figures/fig1_gap_per_epoch.png" width="100%"><br><sub>Choose (solid) and fit (dashed) RMSPE per epoch for the three seeds of each network and per round for LightGBM. The networks reach their best choose error at epoch 13 to 29 while the fit error keeps falling; both LightGBM models stop early on a flat choose curve. Source: <code>results/gpu/*_history.json</code>, <code>results/cpu/v2_*_history.json</code>.</sub></td></tr>
+</table>
+
+#### After training
+
+<table>
+<tr>
+<td width="50%"><img src="optiver-realized-volatility/figures/fig2_error_by_stock_level.png" width="100%"><br><sub>Report RMSPE by stock volatility-level decile. The neural models cut the error of one mid-level decile (decile 5) from about 0.33 to 0.24; the reason was not investigated. Source: <code>results/post/by_stock_level.csv</code>.</sub></td>
+<td width="50%"><img src="optiver-realized-volatility/figures/fig3_error_by_market_regime.png" width="100%"><br><sub>Report RMSPE by market-wide volatility decile of the window. Calm windows (decile 0) have the highest error and the largest gain from the neural models and the cross-stock features. Source: <code>results/post/by_regime.csv</code>.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="optiver-realized-volatility/figures/fig4_residuals_calibration.png" width="100%"><br><sub>Log ratio of prediction to target and binned calibration. All models sit below the target on average (-0.06 to -0.08), which is the RMSPE-optimal shading. Sources: <code>results/post/residual_hist.csv</code>, <code>calibration.csv</code>.</sub></td>
+<td width="50%"><img src="optiver-realized-volatility/figures/fig5_member_disagreement.png" width="100%"><br><sub>Error rises with the disagreement between members (0.15 to 0.22 in mean absolute log error); member predictions correlate 0.97 to 0.995 in logs. Sources: <code>results/post/disagreement.csv</code>, <code>member_correlation.csv</code>.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="optiver-realized-volatility/figures/fig6_feature_attribution.png" width="100%"><br><sub>LightGBM gain importance with and without the cross-stock features. Realised volatility over the whole window dominates; individual cross-stock features carry at most about 1 % of the gain each although together they lower the error by about 7 %. Source: <code>results/cpu/v2_*_importance.csv</code>.</sub></td>
+<td width="50%"></td>
+</tr>
+</table>
+
+### Reproducing
+
+See [`optiver-realized-volatility/README.md`](optiver-realized-volatility/README.md#reproducing) for every command. In short:
+
+```bash
+cd optiver-realized-volatility
+pip install -r requirements.txt
+python -m pytest tests -q
+export OPT_DATA_DIR=/path/to/optiver-realized-volatility-prediction
+python src/run_cpu.py --out runs/cpu --workers 7
+python src/run_gpu.py --out runs/gpu
+python scripts/aggregate_predictions.py --results runs --out results && python scripts/make_figures.py
+```
+
+Requirements: Python 3.12, LightGBM 4, PyTorch 2 with CUDA (a 16 GB card is enough; the six processes use 9.5 GB). The
+competition data is not redistributed here.
+
+### Limitations
+
+- One random split of shuffled windows, no confidence intervals; V3 and V4 are not separable.
+- The local score does not measure the shift to the forecasting period, and the private score shows that shift is large.
+- The cross-stock models assume most stocks of a window are present when predicting.
+- The public 0.0 is unexplained; it is reported, not interpreted as performance.
+
+### References
+
+1. Q. Chen, C.-Y. Robert. *Multivariate Realized Volatility Forecasting with Graph Neural Network.* arXiv:2112.09015, 2021.
+2. A. Lensky, M. Hao. *Learning to Predict Short-Term Volatility with Order Flow Image Representation.* arXiv:2304.02472, 2023.
+3. Z. M. Li, R. J. A. Laeven, M. H. Vellekoop. *Dependent Microstructure Noise and Integrated Volatility Estimation from High-Frequency Data.* arXiv:1704.08964.
+4. J. Lee, Y. Lee, J. Kim, A. Kosiorek, S. Choi, Y. W. Teh. *Set Transformer.* ICML 2019, arXiv:1810.00825.
+5. G. Ke et al. *LightGBM: A Highly Efficient Gradient Boosting Decision Tree.* NeurIPS 2017.
+
+Others that were read are listed in [`optiver-realized-volatility/REFERENCES.md`](optiver-realized-volatility/REFERENCES.md).
 
 ### License
 
