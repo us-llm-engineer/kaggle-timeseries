@@ -40,6 +40,14 @@ for v, pr in P.items():
     for k in range(10):
         m = dec == k; rows.append(dict(variant=v, decile=k, ratio=pr["report"][m].sum() / max(sc["report"].y[m].sum(), 1e-9), share_scaled_sq_error=err[m].sum() / err.sum()))
 pd.DataFrame(rows).round(4).to_csv(f"{a.out}/bias_by_volume.csv", index=False)
+# the separate aggregate-level model on its own: per-level WRMSSE from its forecasts for levels 1-11 (total = sum of the three states), next to bottom-up V1 and V4
+A = np.load(f"{a.preds}/AGG_levels1-11.npy").astype(float); ix = {"choose": 0, "report": 1}; rows = []
+for role in ("choose", "report"):
+    s_ = sc[role]; truth = s_.S @ s_.y; full = np.zeros((s_.S.shape[0], HZ)); full[d.lvl > 0] = A[ix[role]]; full[d.lvl == 0] = A[ix[role]][d.lvl[d.lvl > 0] == 1].sum(0, keepdims=True)
+    for name, f in (("aggregate_model", full), ("V1_lgb_squared", s_.S @ P["V1_lgb_squared"][role]), ("V4_lagfree_aligned", s_.S @ P["V4_lagfree_aligned"][role])):
+        r = np.sqrt(((truth - f) ** 2).mean(1) / s_.scale); per = [np.sum(s_.w[s_.lvl == l] * r[s_.lvl == l]) for l in range(12)]
+        rows.append(dict(model=name, role=role, levels_1_to_9_mean=np.mean(per[:9]), levels_10_to_12_mean=np.mean(per[9:]), **{f"level{i}": per[i] for i in range(12)}))
+pd.DataFrame(rows).round(3).to_csv(f"{a.out}/aggregate_model_per_level.csv", index=False)
 # trees fitted per store (early stopping on the choose role) from the run log
 line = [l for l in open(a.log) if "V1/V2 trained" in l][0]; tup = re.findall(r"\((\d+), (\d+), (\d+), (\d+), (\d+)\)", line)
 pd.DataFrame(tup, columns=["store", "v1_trees", "v2_trees", "v1_secs", "v2_secs"]).astype(int).to_csv(f"{a.out}/store_iterations.csv", index=False)

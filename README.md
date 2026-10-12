@@ -559,7 +559,8 @@ Five facts shape every model here:
 > forecast per role** (28 days each) without confidence intervals.
 >
 > Only V4 beats the weekday-profile baseline. V1 to V3 are worse than it on both windows, and the reconciliation and
-> alignment steps both came out as no-ops (the strength chosen on the choose window was 0).
+> alignment steps both came out as no-ops (the strength chosen on the choose window was 0) because the aggregate-level model
+> behind them was defective.
 
 ### Leaderboard
 
@@ -591,6 +592,7 @@ without refitting. Sources: [`results/metrics.csv`](m5-forecasting-accuracy/resu
 
 - Dropping every lag feature (V4) improved the aggregate levels (total 0.50 against 0.72 for V1) and worsened the three item levels (0.97, 0.92, 0.88 against 0.87, 0.85, 0.84).
 - Every model forecasts too little in total over the report window (0.92 to 0.96 of the actual sum) and every model has its largest daily error on forecast day 21.
+- The separate aggregate-level model behind V3 and the V4 alignment was defective (mean 1.54 / 1.70 over the nine aggregate levels on choose / report), so those two steps being no-ops says nothing about reconciliation to a good forecast.
 - A first run with learning rate 0.1 gave V4 report 0.6664; the second run (rate 0.05, longer patience) 0.6791. The settings were changed after seeing the first run, so they are not a tuning gain, and the second run is the one reported.
 
 Full notes: [`m5-forecasting-accuracy/README.md`](m5-forecasting-accuracy/README.md#experiment-notes).
@@ -642,7 +644,7 @@ redistributed here.
 
 - One 28-day window per role and no confidence intervals; the order of V1, V2 and V3 is not reliable.
 - The models are not refitted for the later forecast origins.
-- Reconciliation and alignment were tested on a three-value grid on one window and both came out as no-ops.
+- Reconciliation and alignment came out as no-ops because the aggregate model behind them was defective; they remain untested.
 - V4 has no recent-demand information besides the item code.
 - Two neural variants trained on a GPU are not part of this folder.
 

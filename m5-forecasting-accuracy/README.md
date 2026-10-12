@@ -14,7 +14,7 @@ the four variants, the numbers, the Kaggle scoring and the exact commands.
 | `scripts/make_figures.py` | Draws the six figures from those tables. |
 | `scripts/make_submission.py` | Writes the Kaggle CSV of one variant. |
 | `tests/test_m5.py` | Leak test with a mutant (corrupting every day from the origin on must not change any feature), a check that training cells end by the last fit day, the alignment identity, and a check that the scorer is zero for a perfect forecast and equals the reference WRMSSE class. |
-| `results/` | `metrics.csv`, `per_level.csv`, `per_horizon.csv`, `bias_total.csv`, `bias_by_volume.csv`, `store_iterations.csv`, `cpu_history.json`, `cpu_run.log`, `data_profile.txt`, `kaggle_scores.csv`, `leaderboard.png`. The per-series forecasts are not published. |
+| `results/` | `metrics.csv`, `per_level.csv`, `aggregate_model_per_level.csv`, `per_horizon.csv`, `bias_total.csv`, `bias_by_volume.csv`, `store_iterations.csv`, `cpu_history.json`, `cpu_run.log`, `data_profile.txt`, `kaggle_scores.csv`, `leaderboard.png`. The per-series forecasts are not published. |
 | `figures/` | The six figures shown in the main README. |
 
 ## The task and the data
@@ -129,6 +129,12 @@ competition's WRMSSE. The model scores lower (better) on the private window than
 - In the first implementation of the aggregate model the intended selection (aggregate levels only) was written as "all series
   except the total", which includes the item-store level. The model therefore trains on 42,839 series. Because alpha = 0 was chosen
   in both uses, it did not change any reported number.
+- **The aggregate-level model was itself defective, so V3 is not a fair test of reconciliation.** Evaluated alone, its forecasts score
+  1.54 (choose) and 1.70 (report) on average over the nine aggregate levels, against 0.61 and 0.75 for V1 and 0.48 and 0.60 for V4
+  ([`results/aggregate_model_per_level.csv`](results/aggregate_model_per_level.csv)). Early stopping kept only 26 trees: the
+  validation rows are dominated by the 30,490 item-store series, whose scaled target (about 0.5) differs from the aggregates'
+  (about 1), so the model stopped before it had moved off the pooled mean. That is why alpha = 0 was chosen, and it is not
+  evidence about reconciliation to a good aggregate forecast.
 - A mutant test (corrupting all days from the origin on) found no feature that reads the future.
 
 ## Compute
@@ -156,6 +162,6 @@ redistributed here.
 
 - One 28-day window per role and no confidence intervals: the order of V1, V2 and V3 on one window is not a reliable ranking.
 - The models are not refitted for later origins; the private window is forecast with weights fitted by d_1885.
-- The alignment and reconciliation steps were tested only through a three-value grid on one window and both came out as no-ops.
+- The alignment and reconciliation steps both came out as no-ops because the aggregate-level model behind them was defective (see the experiment notes); neither idea has been tested with a working aggregate model.
 - V4 has no recent-demand information at all besides the item code, so it cannot follow a series whose level has just changed.
 - Two neural variants trained on a GPU are not part of this folder.
