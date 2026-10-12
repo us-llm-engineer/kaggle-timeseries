@@ -1,0 +1,21 @@
+{
+ "quick": true,
+ "train_sec": 94.6,
+ "day_sec": [
+  0.23,
+  0.14,
+  0.14,
+  0.14
+ ],
+ "days": 4,
+ "rows": 12480,
+ "target_min": 0.0017569721124549263,
+ "target_max": 9031.484662285135,
+ "nan": 0,
+ "matched_rows": 12480,
+ "served_rows": 12480,
+ "feature_mismatch_fraction": {},
+ "mae_served_vs_train_actuals": 71.55,
+ "scored_rows": 12480,
+ "wall_sec": 118.7
+}

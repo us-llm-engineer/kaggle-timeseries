@@ -1,0 +1,31 @@
+{
+ "variant": "v1",
+ "smoke": false,
+ "notes": {
+  "c0": {
+   "rows_fit": 869466,
+   "best_iter": 61
+  },
+  "c1": {
+   "rows_fit": 869466,
+   "best_iter": 538
+  }
+ },
+ "choose": {
+  "rows": 88668,
+  "mae": 51.228660583496094,
+  "mae_prod": 36.495723724365234,
+  "mae_cons": 65.96160888671875,
+  "baseline_lag48_mae": 103.25472259521484,
+  "baseline_lag168_mae": 86.29032897949219
+ },
+ "report": {
+  "rows": 190224,
+  "mae": 63.60932922363281,
+  "mae_prod": 70.27656555175781,
+  "mae_cons": 56.94208908081055,
+  "baseline_lag48_mae": 123.8067398071289,
+  "baseline_lag168_mae": 105.30461883544922
+ },
+ "wall_sec": 471.3
+}
