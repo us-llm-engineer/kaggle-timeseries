@@ -1,0 +1,8 @@
+numpy
+pandas>=2.2
+pyarrow
+lightgbm>=4.5
+torch>=2.2
+matplotlib>=3.8
+pytest
+huggingface_hub   # only for the optional parquet mirror (ENEFIT_HF_REPO)
