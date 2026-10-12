@@ -1,0 +1,18 @@
+[
+  {
+    "method":"carry_forward",
+    "wells":4,
+    "rmse_mean":11.8754031355,
+    "rmse_median":9.0060990644,
+    "mae_mean":10.0014615389,
+    "bias_mean":-4.8657878125
+  },
+  {
+    "method":"recent_linear_md",
+    "wells":4,
+    "rmse_mean":65.7651588601,
+    "rmse_median":44.7583262886,
+    "mae_mean":57.0752715925,
+    "bias_mean":57.0094163429
+  }
+]

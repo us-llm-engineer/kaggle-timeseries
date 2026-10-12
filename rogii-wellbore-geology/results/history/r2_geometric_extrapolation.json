@@ -1,0 +1,52 @@
+[
+  {
+    "method": "carry",
+    "pooled_rmse": 16.752031561358997,
+    "median_well_rmse": 10.891790591389775
+  },
+  {
+    "method": "xy_z_500",
+    "pooled_rmse": 57.524228660694185,
+    "median_well_rmse": 30.4015837966104
+  },
+  {
+    "method": "md_100",
+    "pooled_rmse": 79.1393899312683,
+    "median_well_rmse": 37.48085899298603
+  },
+  {
+    "method": "xy_z_1500",
+    "pooled_rmse": 87.06601747202828,
+    "median_well_rmse": 39.08665857878705
+  },
+  {
+    "method": "xyz_1500",
+    "pooled_rmse": 95.44727729671033,
+    "median_well_rmse": 37.82301473766549
+  },
+  {
+    "method": "xyz_500",
+    "pooled_rmse": 96.56647358168365,
+    "median_well_rmse": 34.17212308595816
+  },
+  {
+    "method": "md_500",
+    "pooled_rmse": 102.19690893238231,
+    "median_well_rmse": 33.33655120719946
+  },
+  {
+    "method": "z_delta",
+    "pooled_rmse": 105.98327569916762,
+    "median_well_rmse": 89.30890259983451
+  },
+  {
+    "method": "xyz_100",
+    "pooled_rmse": 187.42342653079183,
+    "median_well_rmse": 29.46313108592257
+  },
+  {
+    "method": "md_1500",
+    "pooled_rmse": 1066.4601381045645,
+    "median_well_rmse": 881.9869633685596
+  }
+]

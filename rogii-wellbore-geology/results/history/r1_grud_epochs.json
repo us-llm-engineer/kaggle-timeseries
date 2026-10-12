@@ -1,0 +1,74 @@
+[
+  {
+    "epoch": 1,
+    "train_mse": 5.355861660098219,
+    "val_rmse_relative": 4.026707172393799,
+    "grad_norm": 6.656890861919852,
+    "teacher_ratio": 0.75,
+    "epoch_seconds": 92.12849879264832,
+    "spectral_radius": null
+  },
+  {
+    "epoch": 2,
+    "train_mse": 3.0576984893565498,
+    "val_rmse_relative": 8.611472129821777,
+    "grad_norm": 4.753934437623731,
+    "teacher_ratio": 0.5,
+    "epoch_seconds": 94.4745569229126,
+    "spectral_radius": null
+  },
+  {
+    "epoch": 3,
+    "train_mse": 2.8504025298072944,
+    "val_rmse_relative": 7.256144046783447,
+    "grad_norm": 13.256434207165299,
+    "teacher_ratio": 0.25,
+    "epoch_seconds": 96.42292404174805,
+    "spectral_radius": null
+  },
+  {
+    "epoch": 4,
+    "train_mse": 15.51081923027024,
+    "val_rmse_relative": 3.5580437183380127,
+    "grad_norm": 568.4093367400543,
+    "teacher_ratio": 0.0,
+    "epoch_seconds": 98.42587494850159,
+    "spectral_radius": null
+  },
+  {
+    "epoch": 5,
+    "train_mse": 14.963731309196415,
+    "val_rmse_relative": 3.548841953277588,
+    "grad_norm": 16.319851911191332,
+    "teacher_ratio": 0.0,
+    "epoch_seconds": 97.30024719238281,
+    "spectral_radius": null
+  },
+  {
+    "epoch": 6,
+    "train_mse": 14.863858017907175,
+    "val_rmse_relative": 3.5403385162353516,
+    "grad_norm": 17.38709468736809,
+    "teacher_ratio": 0.0,
+    "epoch_seconds": 95.35789084434509,
+    "spectral_radius": null
+  },
+  {
+    "epoch": 7,
+    "train_mse": 14.759001574429151,
+    "val_rmse_relative": 3.532491445541382,
+    "grad_norm": 19.398453108434165,
+    "teacher_ratio": 0.0,
+    "epoch_seconds": 94.67932224273682,
+    "spectral_radius": null
+  },
+  {
+    "epoch": 8,
+    "train_mse": 14.63312441695409,
+    "val_rmse_relative": 3.5216073989868164,
+    "grad_norm": 21.79737324156351,
+    "teacher_ratio": 0.0,
+    "epoch_seconds": 96.46284627914429,
+    "spectral_radius": null
+  }
+]

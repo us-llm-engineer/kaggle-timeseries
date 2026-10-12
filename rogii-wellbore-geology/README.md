@@ -20,8 +20,9 @@ the data split, every model that was tried, the per-fold tables, the design deci
 | `results/training/` | One JSON line per epoch for all 15 fold runs and the 3 full-data runs. |
 | `results/stack/` | Stack log per fold and pooled, per-well errors, RMSE by distance from the cut. |
 | `results/baselines/` | Summary logs of the baselines and of the failed variants. |
+| `results/history/` | Logs from earlier rounds and `experiments.csv`, the table of all 21 experiments (E1-E21). |
 | `results/leaderboard.csv`, `results/leaderboard.png` | Kaggle scores of the two submissions. |
-| `figures/` | The 11 figures shown in the main README. |
+| `figures/` | The 12 figures shown in the main README (5 during training, 6 after training, 1 for the experiment history). |
 | `REFERENCES.md` | Every paper, its role (used, tried or read), and BibTeX entries. |
 
 ## Data and evaluation protocol
@@ -58,7 +59,8 @@ the data split, every model that was tried, the per-fold tables, the design deci
 | Gated A/B | `stack.py` | folds 2-5 | 13.18 | 15.71 | `results/stack/stack_log.jsonl` |
 | Gated + scale direction | `stack.py` | folds 2-5 | 13.17 | 15.71 | `results/stack/stack_log.jsonl` |
 
-The "not shipped" variants are reported so that the negative results are on record. They are not needed to reproduce
+The "not shipped" variants are reported so that the negative results are on record. The complete history, including
+round 1-2 attempts, is in the main README and `results/history/experiments.csv`. They are not needed to reproduce
 the submission.
 
 ### Stack stages per fold (`results/stack/stack_log.jsonl`)

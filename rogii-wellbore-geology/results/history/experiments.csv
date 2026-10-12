@@ -1,0 +1,22 @@
+id,round,experiment,family,role,rmse_ft,carry_ft,verdict,source
+E1,1,Carry-forward (repeat last known TVT),baseline,folds 2-5,15.711,15.711,reference,results/history/r1_carry.json
+E2,1,Linear extrapolation of TVT in MD from the recent prefix,baseline,4-well smoke (mean per-well),65.765,11.875,failed,results/history/r1_first_baseline_smoke.json
+E3,1,LightGBM on per-row features (offset from last TVT),gradient boosting,folds 2-5,16.245,15.711,worse than carry,results/history/r1_lightgbm_rows.json
+E4,1,GRU-D style seq2seq (T4 GPU),sequence model,fold 1,16.532,16.752,marginal,results/history/r1_grud_ssm_full_suffix.json
+E5,1,Companion-matrix state-space model (T4 GPU),sequence model,fold 1,18.429,16.752,worse than carry,results/history/r1_grud_ssm_full_suffix.json
+E6,2,Geometric extrapolation of TVT (best of 9 variants),geometry prior,fold 1,57.524,16.752,failed,results/history/r2_geometric_extrapolation.json
+E7,3,Grid tracker V1: forward-backward + heavy-tailed GR emission,Bayesian tracking,folds 2-5,16.917,15.711,worse than carry,results/baselines/tracker_v1_report.jsonl
+E8,3,Grid tracker V2: spliced reference + multi-scale emission,Bayesian tracking,folds 2-5,17.385,15.711,worse than carry,results/baselines/tracker_v2_report.jsonl
+E9,3,Tracker with LightGBM-learned emission (V3),Bayesian tracking,fold 1 smoke (AUC 0.896),,,abandoned,
+E10,3,Coarsened tracker (likelihood power alpha/(alpha+n)),Bayesian tracking,folds 2-5,14.457,15.711,first win over carry,results/baselines/coarsened_tracker_report.jsonl
+E11,3,Optimal-transport (W2) window misfit tracker,Bayesian tracking,fold 1,46.333,16.752,failed,results/baselines/ot_misfit_choose.jsonl
+E12,3,Multi-hypothesis path network chained with a beam,deep learning,fold 1,21.106,16.752,failed,results/baselines/mtp_net_choose.jsonl
+E13,3,Fusion of E10-E12 emissions,Bayesian tracking,,,,not run (components failed),
+E14,4,1-D residual U-Net x3 widths + iterative local cost volume,deep learning,fold 1,15.709,16.752,small gain,results/baselines/unet1d_choose.jsonl
+E15,4,Block-level LightGBM on absolute-frame + tracker features,gradient boosting,folds 1-5 (block metric),,,superseded,results/history/r4_block_gbm.jsonl
+E16,5,Grid U-Net blend widths 16+24 with LightGBM margin,deep learning + stack,folds 2-5,13.157,15.711,superseded by 3 widths,results/history/r5_stack_2widths_lgbm.jsonl
+E17,5,Grid U-Net blend 3 widths with XGBoost (GPU) margin,deep learning + stack,folds 2-5,13.667,15.711,margin overfit,results/history/r5_stack_3widths_xgb.jsonl
+E18,5,A: grid U-Net snapshot blend 3 widths,deep learning,folds 2-5,13.270,15.711,submitted (private 12.180),results/stack/stack_log.jsonl
+E19,5,B: A + LightGBM margin,deep learning + stack,folds 2-5,13.070,15.711,submitted (private 11.980) - best,results/stack/stack_log.jsonl
+E20,5,B with per-well gate A/B,deep learning + stack,folds 2-5,13.176,15.711,not better than B,results/stack/stack_log.jsonl
+E21,5,Gate + scale direction (A32 - A16),deep learning + stack,folds 2-5,13.175,15.711,not better than B,results/stack/stack_log.jsonl

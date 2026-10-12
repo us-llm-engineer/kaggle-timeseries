@@ -1,0 +1,44 @@
+[
+  {
+    "method": "grud",
+    "checkpoint_epoch": 8,
+    "validation_wells_done": 154,
+    "validation_wells_total": 154,
+    "points": 752813,
+    "rmse": 16.531984737087253,
+    "elapsed_seconds": 6.394455249999993,
+    "horizon_rmse": {
+      "0_255": 3.5854872375796765,
+      "256_1023": 10.527506589626823,
+      "1024_plus": 17.961936916972697
+    },
+    "horizon_points": {
+      "0_255": 39424,
+      "256_1023": 117655,
+      "1024_plus": 595734
+    },
+    "validation_role": "fold_1_used_for_checkpoint_selection",
+    "target": "TVT offset from last observed TVT; RMSE equals absolute TVT RMSE after restoring boundary"
+  },
+  {
+    "method": "ssm",
+    "checkpoint_epoch": 8,
+    "validation_wells_done": 154,
+    "validation_wells_total": 154,
+    "points": 752813,
+    "rmse": 18.429409874824536,
+    "elapsed_seconds": 6.695927904000001,
+    "horizon_rmse": {
+      "0_255": 4.427562229541554,
+      "256_1023": 9.798517827940312,
+      "1024_plus": 20.22223616048524
+    },
+    "horizon_points": {
+      "0_255": 39424,
+      "256_1023": 117655,
+      "1024_plus": 595734
+    },
+    "validation_role": "fold_1_used_for_checkpoint_selection",
+    "target": "TVT offset from last observed TVT; RMSE equals absolute TVT RMSE after restoring boundary"
+  }
+]

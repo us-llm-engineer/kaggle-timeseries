@@ -24,12 +24,17 @@ Doing nothing already sets a strong baseline: the **carry-forward** prediction (
 
 ### Disclaimer on compute
 
-> All models were trained on **a single low-tier GPU: one cloud NVIDIA L4, a T4-class card**. The whole final
-> pipeline used about **1.7 GPU-hours** of training: 15 cross-validation runs plus 3 full-data runs of 12 epochs each,
-> logged in [`results/training/`](rogii-wellbore-geology/results/training/). The smallest final model is a
-> 0.5 M-parameter U-Net and the largest is 2.1 M. Top leaderboard solutions train on far more compute, with more
-> seeds, longer schedules and synthetic-well pre-training. For that budget, a private score of 11.98 ft is a decent result (out-of-fold, the
-> submitted model is 17 % below carry-forward), not a state-of-the-art one.
+> Everything ran on **low-tier hardware: one GPU at a time**.
+>
+> - Round 1 sequence models (GRU-D, SSM): one **NVIDIA T4**.
+> - Final U-Nets: one **NVIDIA L4**, a T4-class card.
+> - Trackers and gradient boosting: a multi-core CPU.
+>
+> The submitted pipeline used about **1.7 GPU-hours** of training: 15 cross-validation runs plus 3 full-data runs of
+> 12 epochs each, logged in [`results/training/`](rogii-wellbore-geology/results/training/). The final U-Nets have
+> 0.5 M to 2.1 M parameters. Top leaderboard solutions use far more compute, more seeds, longer schedules and
+> synthetic-well pre-training. For this budget, a private score of 11.98 ft is a decent result, not a state-of-the-art
+> one. Out-of-fold, the submitted model is 17 % below carry-forward.
 
 ### Leaderboard
 
@@ -44,6 +49,66 @@ These are code-competition submissions: a Kaggle notebook ([`notebooks/inference
 loads frozen checkpoints and predicts the hidden test wells. Both were scored after the competition deadline. Sources:
 [`results/leaderboard.csv`](rogii-wellbore-geology/results/leaderboard.csv) and
 [`results/stack/stack_log.jsonl`](rogii-wellbore-geology/results/stack/stack_log.jsonl).
+
+### Experiment history: what failed before the submission
+
+Most attempts failed. A model counts as useful only if it beats **carry-forward** on the same rows, because simply
+repeating the last known TVT is a strong baseline (15.71 ft on folds 2-5, 16.75 ft on fold 1). Each experiment below
+was scored on held-out wells under fixed fold roles: fold 1 for choices, folds 2-5 for reporting. The table includes
+every attempt, including the abandoned ones.
+
+<p align="center"><img src="rogii-wellbore-geology/figures/history_experiments.png" width="100%" alt="All experiments relative to carry-forward"></p>
+<p align="center"><sub>Every scored experiment as a ratio to carry-forward on the same rows (below 1 is better). Source: <code>results/history/experiments.csv</code>.</sub></p>
+
+| # | Round | Experiment | Scored on | RMSE (ft) | Carry (ft) | Outcome |
+| --- | --- | --- | --- | --- | --- | --- |
+| E1 | 1 | Carry-forward | folds 2-5 | 15.71 | 15.71 | reference |
+| E2 | 1 | Linear extrapolation of TVT in MD | 4-well smoke test | 65.77 | 11.88 | failed: drifts off quickly |
+| E3 | 1 | LightGBM on per-row features | folds 2-5 | 16.24 | 15.71 | **worse than carry** |
+| E4 | 1 | GRU-D-style seq2seq (T4) | fold 1 | 16.53 | 16.75 | barely better |
+| E5 | 1 | Companion-matrix state-space model (T4) | fold 1 | 18.43 | 16.75 | **worse than carry** |
+| E6 | 2 | Geometric extrapolation of TVT (best of 9 variants) | fold 1 | 57.52 | 16.75 | failed |
+| E7 | 3 | Grid tracker V1 (exact Bayesian) | folds 2-5 | 16.92 | 15.71 | **worse than carry**: locks onto wrong layers |
+| E8 | 3 | Grid tracker V2 (multi-scale emission) | folds 2-5 | 17.38 | 15.71 | **worse than carry** |
+| E9 | 3 | Tracker with learned (LightGBM) emission | fold 1 smoke | AUC 0.896 | - | abandoned before tracking |
+| E10 | 3 | Coarsened tracker | folds 2-5 | 14.46 | 15.71 | first win over carry |
+| E11 | 3 | Optimal-transport (W2) window tracker | fold 1 | 46.33 | 16.75 | failed |
+| E12 | 3 | Multi-hypothesis net chained with a beam | fold 1 | 21.11 | 16.75 | failed |
+| E13 | 3 | Fusion of E10-E12 | - | - | - | not run (two of three parts failed) |
+| E14 | 4 | 1-D residual U-Nets with iterative cost volume | fold 1 | 15.71 | 16.75 | small gain |
+| E15 | 4 | Block-level LightGBM base | folds 1-5 | block metric only | - | superseded |
+| E16 | 5 | Grid U-Net, widths 16+24, plus LightGBM margin | folds 2-5 | 13.16 | 15.71 | superseded by three widths |
+| E17 | 5 | Grid U-Net, 3 widths, plus XGBoost (GPU) margin | folds 2-5 | 13.67 | 15.71 | margin overfit |
+| **E18** | 5 | **A: grid U-Net snapshot blend, 3 widths** | folds 2-5 | **13.27** | 15.71 | **submitted: 12.180 private** |
+| **E19** | 5 | **B: A + LightGBM margin** | folds 2-5 | **13.07** | 15.71 | **submitted: 11.980 private (best)** |
+| E20 | 5 | B with a per-well A/B gate | folds 2-5 | 13.18 | 15.71 | not better than B |
+| E21 | 5 | Gate + scale direction | folds 2-5 | 13.18 | 15.71 | not better than B |
+
+Sources: [`results/history/`](rogii-wellbore-geology/results/history/), [`results/baselines/`](rogii-wellbore-geology/results/baselines/)
+and [`results/stack/`](rogii-wellbore-geology/results/stack/). E2 is a mean of per-well RMSEs; every other number is a
+pooled row RMSE. Fold 1 numbers come from the fold used for choices, so they are slightly optimistic.
+
+**What each round taught the next one.**
+
+1. **Generic forecasters fail** (E2-E5). Predicting TVT from the well's own recent history ignores the only real
+   evidence, the match between the well's GR and the type well. Errors grow with distance from the cut, and the
+   models end up close to carry-forward.
+2. **Pure geometry fails** (E6). Extrapolating TVT linearly in X, Y, Z or MD amplifies small slope errors over
+   thousands of rows.
+3. **Exact Bayesian tracking is overconfident** (E7-E8). Thousands of correlated GR samples are treated as independent
+   evidence. The posterior collapses onto one layer, which is often wrong where layers repeat. Coarsening the
+   likelihood (E10) fixed the overconfidence and gave the first gain. More expressive likelihoods (E11 optimal
+   transport, E12 multi-hypothesis net) were worse.
+4. **Learned 1-D models help a little** (E14). A 1-D U-Net with a local cost volume only sees a narrow window of
+   candidate depths around its current estimate. When the estimate drifts, the right layer leaves the window.
+5. **The 2-D image formulation works** (E16-E21). The model sees every candidate depth (±96 ft) at once for the whole
+   suffix, alongside the known history and a constant-dip prior. It then decodes an expected value, which is what
+   RMSE rewards. A gradient-boosted margin trained on out-of-fold errors adds a little. Extra stack levels (gate,
+   scale direction) did not generalise.
+
+### Methodologies
+
+Every method (E1-E21), with input, model, output and outcome: [`rogii-wellbore-geology/docs/methodologies.md`](rogii-wellbore-geology/docs/methodologies.md).
 
 ### Key mathematical points
 
@@ -180,8 +245,7 @@ batch 8), and LightGBM 4. The competition data is not redistributed here.
   schedules.
 - The U-Nets were trained on a random 50 % of the training wells in each fold, to fit the time budget.
 - Fold 1 was used to make design choices, so the unbiased local numbers are those on folds 2-5.
-- Methods that failed (an optimal-transport misfit, a chained multi-hypothesis network and a 1-D U-Net) are listed in
-  the project README with their logs.
+- 19 of the 21 experiments were not submitted, and many failed outright. All are listed above with their logs.
 
 ### References
 

@@ -1,0 +1,74 @@
+[
+  {
+    "epoch": 1,
+    "train_mse": 15.175598204033086,
+    "val_rmse_relative": 3.57322359085083,
+    "grad_norm": 6099.715961006664,
+    "teacher_ratio": 0.75,
+    "epoch_seconds": 72.40115714073181,
+    "spectral_radius": 0.9543814659118652
+  },
+  {
+    "epoch": 2,
+    "train_mse": 15.064436304547776,
+    "val_rmse_relative": 3.554431200027466,
+    "grad_norm": 12.241580066549314,
+    "teacher_ratio": 0.5,
+    "epoch_seconds": 72.27093172073364,
+    "spectral_radius": 0.9428246021270752
+  },
+  {
+    "epoch": 3,
+    "train_mse": 14.892877303875753,
+    "val_rmse_relative": 3.5378611087799072,
+    "grad_norm": 16.92794676906393,
+    "teacher_ratio": 0.25,
+    "epoch_seconds": 72.47839426994324,
+    "spectral_radius": 0.9298384189605713
+  },
+  {
+    "epoch": 4,
+    "train_mse": 14.723407021097767,
+    "val_rmse_relative": 3.519413948059082,
+    "grad_norm": 21.598629310388457,
+    "teacher_ratio": 0.0,
+    "epoch_seconds": 71.24782752990723,
+    "spectral_radius": 0.9179260730743408
+  },
+  {
+    "epoch": 5,
+    "train_mse": 14.504337796161266,
+    "val_rmse_relative": 3.4895434379577637,
+    "grad_norm": 28.44552471856405,
+    "teacher_ratio": 0.0,
+    "epoch_seconds": 71.58619713783264,
+    "spectral_radius": 0.9242592453956604
+  },
+  {
+    "epoch": 6,
+    "train_mse": 14.103390680677439,
+    "val_rmse_relative": 3.425861120223999,
+    "grad_norm": 43.34796467970138,
+    "teacher_ratio": 0.0,
+    "epoch_seconds": 70.31814336776733,
+    "spectral_radius": 0.9394758343696594
+  },
+  {
+    "epoch": 7,
+    "train_mse": 13.28664909334182,
+    "val_rmse_relative": 3.253473997116089,
+    "grad_norm": 79.49451084708335,
+    "teacher_ratio": 0.0,
+    "epoch_seconds": 72.77811908721924,
+    "spectral_radius": 0.9730530977249146
+  },
+  {
+    "epoch": 8,
+    "train_mse": 11.552768802301287,
+    "val_rmse_relative": 3.005265951156616,
+    "grad_norm": 164.68253457439798,
+    "teacher_ratio": 0.0,
+    "epoch_seconds": 72.97312021255493,
+    "spectral_radius": 0.9851599931716919
+  }
+]

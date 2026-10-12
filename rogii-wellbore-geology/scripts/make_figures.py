@@ -181,7 +181,27 @@ def fig_cv_lb():
     save(fig, "post_cv_vs_leaderboard.png")
 
 
+def fig_history():
+    h = pd.read_csv(RES / "history" / "experiments.csv").dropna(subset=["rmse_ft", "carry_ft"])
+    h = h[~h.id.isin(["E1"])]
+    h["ratio"] = h.rmse_ft / h.carry_ft
+    cols = {1: "tab:gray", 2: "tab:brown", 3: "tab:olive", 4: "tab:orange", 5: "tab:blue"}
+    fig, ax = plt.subplots(figsize=(11, 5.8))
+    y = np.arange(len(h))
+    ax.barh(y, h.ratio, color=[cols[r] for r in h["round"]])
+    ax.axvline(1.0, color="k", lw=1.2, ls="--")
+    ax.set_yticks(y, [f"{i}  {e if len(e) <= 62 else e[:60] + chr(8230)}" for i, e in zip(h.id, h.experiment)], fontsize=7); ax.invert_yaxis()
+    ax.set_xscale("log"); ax.set_xlabel("RMSE / carry-forward RMSE on the same rows (log scale; < 1 beats carry)")
+    for yy, (r, v, role) in enumerate(zip(h.ratio, h.rmse_ft, h.role)):
+        ax.text(r * 1.03, yy, f"{v:.2f} ft ({role})", va="center", fontsize=6.5)
+    from matplotlib.patches import Patch
+    ax.legend(handles=[Patch(color=c, label=f"round {r}") for r, c in cols.items()], fontsize=7, loc="lower right")
+    ax.set_xlim(0.7, 9)
+    ax.set_title("experiment history: every scored attempt relative to carry-forward")
+    save(fig, "history_experiments.png")
+
+
 if __name__ == "__main__":
     df, full = fold_logs(), full_logs()
     fig_heldout_curves(df); fig_loss(df, full); fig_grad_lr(df); fig_calibration(df); fig_throughput(df, full)
-    fig_methods(); fig_per_fold(); fig_per_well(); fig_horizon(); fig_missing(); fig_cv_lb()
+    fig_methods(); fig_per_fold(); fig_per_well(); fig_horizon(); fig_missing(); fig_cv_lb(); fig_history()
