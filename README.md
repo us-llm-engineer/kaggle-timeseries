@@ -8,6 +8,7 @@ figures, and its own detailed README.
 | [`rogii-wellbore-geology/`](rogii-wellbore-geology/) | [ROGII Wellbore Geology Prediction](https://www.kaggle.com/competitions/rogii-wellbore-geology-prediction) (2026) | Predict the stratigraphic depth (TVT) of a horizontal well beyond the last interpreted point, from gamma ray, trajectory and a vertical type well | **RMSE 11.622 public / 11.980 private (ft)** |
 | [`enefit-prosumer-energy/`](enefit-prosumer-energy/) | [Enefit - Predict Energy Behavior of Prosumers](https://www.kaggle.com/competitions/predict-energy-behavior-of-prosumers) (2023-24) | Day-ahead hourly solar production and consumption of 69 prosumer segments, from weather forecasts, capacity and a two-day-delayed target history | **MAE 56.6 kWh back-test** (not scored on Kaggle) |
 | [`optiver-realized-volatility/`](optiver-realized-volatility/) | [Optiver Realized Volatility Prediction](https://www.kaggle.com/competitions/optiver-realized-volatility-prediction) (2021-22) | Realised volatility of the next ten minutes of 112 stocks, from one-second order-book and trade data of the current window | **RMSPE 0.2057 local report**; Kaggle private 0.24597 (late submission; the public column shows an implausible 0.0, see below) |
+| [`m5-forecasting-accuracy/`](m5-forecasting-accuracy/) | [M5 Forecasting - Accuracy](https://www.kaggle.com/competitions/m5-forecasting-accuracy) (2020) | Daily unit sales of 30,490 item-store series for the next 28 days, scored by WRMSSE over 12 aggregation levels, from calendar, SNAP days and prices | **WRMSSE 0.67907 public / 0.60711 private** (late submission) |
 
 ---
 
@@ -536,6 +537,123 @@ competition data is not redistributed here.
 5. G. Ke et al. *LightGBM: A Highly Efficient Gradient Boosting Decision Tree.* NeurIPS 2017.
 
 Others that were read are listed in [`optiver-realized-volatility/REFERENCES.md`](optiver-realized-volatility/REFERENCES.md).
+
+## M5 forecasting accuracy: per-store gradient boosting, with and without lag features
+
+### The problem
+
+The data has 1,941 days of unit sales for 30,490 item-store series (3,049 items in 10 stores of three states), the calendar
+with events and SNAP days, and weekly sell prices. The task is to forecast the next 28 days. The score is the weighted root
+mean squared scaled error (WRMSSE) over 12 aggregation levels, 42,840 series from the grand total down to item by store.
+Five facts shape every model here:
+
+- 68.0 % of the cells are zero and 76 % of the series are intermittent;
+- 77.1 % of the series have their first sale after the first day, so many series are young;
+- a strong weekday profile and a SNAP effect on food sales (ratio 1.10 to 1.30 by state);
+- the upper levels carry most of the weight, and they are scored on the scale of their own history;
+- the mean of the last 28 days times a 52-week weekday profile already scores WRMSSE 0.7161 on the report window.
+
+### Disclaimer on compute and on the result
+
+> The four variants ran on a **4-core, 16 GiB cloud CPU sandbox** in 98 s, with no GPU. The result is a **single-origin
+> forecast per role** (28 days each) without confidence intervals.
+>
+> Only V4 beats the weekday-profile baseline. V1 to V3 are worse than it on both windows, and the reconciliation and
+> alignment steps both came out as no-ops (the strength chosen on the choose window was 0).
+
+### Leaderboard
+
+<p align="center"><img src="m5-forecasting-accuracy/results/leaderboard.png" width="640" alt="Kaggle leaderboard: submission_V4_lagfree_aligned private 0.60711 public 0.67907, complete after deadline"></p>
+
+| Submission | What it is | Choose | Report | Public | Private |
+| --- | --- | --- | --- | --- | --- |
+| `submission_V4_lagfree_aligned` | lag-free per-store LightGBM (alignment strength chosen 0) | 0.5856 | 0.6791 | **0.67907** | **0.60711** |
+
+The CSV was submitted after the deadline. The public window is the report window, and the public score equals the local
+report score to four digits, so the local scorer reproduces the competition's. Source:
+[`results/kaggle_scores.csv`](m5-forecasting-accuracy/results/kaggle_scores.csv).
+
+### Results
+
+| Model | What it is | Choose WRMSSE | Report WRMSSE |
+| --- | --- | --- | --- |
+| baseline | mean of last 28 days x weekday profile (52 weeks) | 0.6430 | 0.7161 |
+| V1 | per-store LightGBM, direct over the horizon, squared loss | 0.6689 | 0.7772 |
+| V2 | the same with the Tweedie loss | 0.6617 | 0.7938 |
+| V3 | V2 reconciled to a scaled aggregate-level model (strength chosen 0, so equal to V2) | 0.6617 | 0.7938 |
+| V4 | lag-free per-store LightGBM on calendar, price and item codes (alignment strength chosen 0) | **0.5856** | **0.6791** |
+
+Fit on targets up to d_1885; *choose* = d_1886 to d_1913, *report* = d_1914 to d_1941, both forecast from the fitted models
+without refitting. Sources: [`results/metrics.csv`](m5-forecasting-accuracy/results/metrics.csv),
+[`results/per_level.csv`](m5-forecasting-accuracy/results/per_level.csv).
+
+### Experiment notes
+
+- Dropping every lag feature (V4) improved the aggregate levels (total 0.50 against 0.72 for V1) and worsened the three item levels (0.97, 0.92, 0.88 against 0.87, 0.85, 0.84).
+- Every model forecasts too little in total over the report window (0.92 to 0.96 of the actual sum) and every model has its largest daily error on forecast day 21.
+- A first run with learning rate 0.1 gave V4 report 0.6664; the second run (rate 0.05, longer patience) 0.6791. The settings were changed after seeing the first run, so they are not a tuning gain, and the second run is the one reported.
+
+Full notes: [`m5-forecasting-accuracy/README.md`](m5-forecasting-accuracy/README.md#experiment-notes).
+
+### Methodologies
+
+The four variants, the fixed roles and the score are described in
+[`m5-forecasting-accuracy/README.md`](m5-forecasting-accuracy/README.md#the-four-variants).
+
+### Visualizations
+
+Every figure is regenerated by `python scripts/make_figures.py` from the files in
+[`m5-forecasting-accuracy/results/`](m5-forecasting-accuracy/results/).
+
+#### After training
+
+<table>
+<tr>
+<td width="50%"><img src="m5-forecasting-accuracy/figures/fig1_choose_vs_report.png" width="100%"><br><sub>WRMSSE of the baseline and the four variants on the choose and report windows. Only V4 is below the baseline on both. Source: <code>results/metrics.csv</code>.</sub></td>
+<td width="50%"><img src="m5-forecasting-accuracy/figures/fig2_error_by_level.png" width="100%"><br><sub>Report error by aggregation level. V4 is best at the upper levels and worst at the three item levels. Source: <code>results/per_level.csv</code>.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="m5-forecasting-accuracy/figures/fig3_error_by_horizon.png" width="100%"><br><sub>WRMSSE computed from one forecast day at a time. All models, the baseline included, peak on day 21. Source: <code>results/per_horizon.csv</code>.</sub></td>
+<td width="50%"><img src="m5-forecasting-accuracy/figures/fig4_total_bias.png" width="100%"><br><sub>Sum of forecasts over sum of actuals per forecast day; the models fall below 1 on most days. Source: <code>results/bias_total.csv</code>.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="m5-forecasting-accuracy/figures/fig5_bias_by_volume.png" width="100%"><br><sub>The same ratio by sales-volume decile of the item-store series: V2 forecasts 0.45 of the actual in the lowest decile, V4 forecasts 1.2 to 1.5 times the actual in the three lowest. Source: <code>results/bias_by_volume.csv</code>.</sub></td>
+<td width="50%"><img src="m5-forecasting-accuracy/figures/fig6_trees_per_store.png" width="100%"><br><sub>Trees kept by early stopping on the choose window, per store: 48 to 270 for V1 and 52 to 218 for V2. Source: <code>results/store_iterations.csv</code>.</sub></td>
+</tr>
+</table>
+
+### Reproducing
+
+See [`m5-forecasting-accuracy/README.md`](m5-forecasting-accuracy/README.md#reproducing) for every command. In short:
+
+```bash
+cd m5-forecasting-accuracy
+pip install -r requirements.txt
+export M5_DATA_DIR=/path/to/m5-forecasting-accuracy
+python scripts/build_prep.py && python -m pytest tests -q
+python src/cpu_variants.py --cores 4 | tee results/cpu_run.log
+python scripts/analyze.py && python scripts/make_figures.py
+```
+
+Requirements: Python 3.11 or newer, LightGBM 4, a multi-core CPU with 16 GiB of memory. The competition data is not
+redistributed here.
+
+### Limitations
+
+- One 28-day window per role and no confidence intervals; the order of V1, V2 and V3 is not reliable.
+- The models are not refitted for the later forecast origins.
+- Reconciliation and alignment were tested on a three-value grid on one window and both came out as no-ops.
+- V4 has no recent-demand information besides the item code.
+- Two neural variants trained on a GPU are not part of this folder.
+
+### References
+
+1. S. Makridakis, E. Spiliotis, V. Assimakopoulos et al. *The M5 accuracy competition: Results, findings, and conclusions.* International Journal of Forecasting 38(4), 2022.
+2. M. Anderer, F. Li. *Hierarchical forecasting with a top-down alignment of independent level forecasts.* arXiv:2103.08250, 2021.
+3. Z. Islam, A. Mohammed. *Global tree forecasters collapse at the hierarchical aggregate: a five-panel failure characterization.* arXiv:2609.27912.
+4. G. Ke et al. *LightGBM: A Highly Efficient Gradient Boosting Decision Tree.* NeurIPS 2017.
+
+Others that were read are listed in [`m5-forecasting-accuracy/REFERENCES.md`](m5-forecasting-accuracy/REFERENCES.md).
 
 ### License
 
