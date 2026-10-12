@@ -132,8 +132,8 @@ competition's WRMSSE. The model scores lower (better) on the private window than
 - **The aggregate-level model was itself defective, so V3 is not a fair test of reconciliation.** Evaluated alone, its forecasts score
   1.54 (choose) and 1.70 (report) on average over the nine aggregate levels, against 0.61 and 0.75 for V1 and 0.48 and 0.60 for V4
   ([`results/aggregate_model_per_level.csv`](results/aggregate_model_per_level.csv)). Early stopping kept only 26 trees: the
-  validation rows are dominated by the 30,490 item-store series, whose scaled target (about 0.5) differs from the aggregates'
-  (about 1), so the model stopped before it had moved off the pooled mean. That is why alpha = 0 was chosen, and it is not
+  validation rows are dominated by the 30,490 item-store series, whose scaled target (mean 0.39 at origin 1500) differs from the aggregates'
+  (mean 0.72; 71 % of the training rows are item-store series), so the model stopped before it had moved off the pooled mean. That is why alpha = 0 was chosen, and it is not
   evidence about reconciliation to a good aggregate forecast.
 - A mutant test (corrupting all days from the origin on) found no feature that reads the future.
 
