@@ -1,0 +1,33 @@
+[11:27:32] start workers=7 cap=20.0min build<=6.0 v2<=8.0
+[11:27:36] build 1/112 stocks 1% 3s eta 365s
+[11:27:38] build 9/112 stocks 8% 5s eta 61s
+[11:27:40] build 17/112 stocks 15% 7s eta 41s
+[11:27:42] build 25/112 stocks 22% 10s eta 33s
+[11:27:45] build 33/112 stocks 29% 12s eta 29s
+[11:27:48] build 41/112 stocks 37% 15s eta 26s
+[11:27:50] build 49/112 stocks 44% 17s eta 22s
+[11:27:52] build 57/112 stocks 51% 19s eta 19s
+[11:27:54] build 65/112 stocks 58% 21s eta 15s
+[11:27:56] build 73/112 stocks 65% 23s eta 12s
+[11:27:58] build 81/112 stocks 72% 25s eta 10s
+[11:28:01] build 89/112 stocks 79% 28s eta 7s
+[11:28:03] build 97/112 stocks 87% 30s eta 5s
+[11:28:05] build 105/112 stocks 94% 32s eta 2s
+[11:28:07] build 112/112 stocks 100% 34s eta 0s
+[11:28:09] features (428932, 119) built in 37s (seq=False)
+[11:28:10] table (428932, 121); roles [303388  63053  62491]
+[11:28:11] v1_plain alpha=0.01 choose RMSPE 0.2461 fit 0.2481
+[11:28:11] v1_plain alpha=0.1 choose RMSPE 0.2461 fit 0.2481
+[11:28:11] v1_plain alpha=1 choose RMSPE 0.2461 fit 0.2481
+[11:28:12] v1_plain alpha=10 choose RMSPE 0.2461 fit 0.2481
+[11:28:12] v1_plain alpha=100 choose RMSPE 0.2461 fit 0.2481
+[11:28:12] v1_plain alpha=1000 choose RMSPE 0.2462 fit 0.2479
+[11:28:12] v1_plain FINAL alpha=0.01 choose 0.2461 report 0.2432
+[11:28:14] v1_est alpha=0.01 choose RMSPE 0.2459 fit 0.2464
+[11:28:14] v1_est alpha=0.1 choose RMSPE 0.2459 fit 0.2464
+[11:28:14] v1_est alpha=1 choose RMSPE 0.2459 fit 0.2464
+[11:28:14] v1_est alpha=10 choose RMSPE 0.2459 fit 0.2464
+[11:28:14] v1_est alpha=100 choose RMSPE 0.2460 fit 0.2467
+[11:28:14] v1_est alpha=1000 choose RMSPE 0.2461 fit 0.2473
+[11:28:14] v1_est FINAL alpha=0.1 choose 0.2459 report 0.2431
+[11:32:06] ALL DONE in 274s

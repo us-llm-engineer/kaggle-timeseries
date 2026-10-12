@@ -1,0 +1,26 @@
+[11:28:19] v2_cross round 25 choose RMSPE 0.2635 (best 0.2635@25) 7.6 r/s since_best 0 left 477s
+[11:28:20] v2_cross round 50 choose RMSPE 0.2280 (best 0.2280@50) 11.0 r/s since_best 0 left 475s
+[11:28:21] v2_cross round 75 choose RMSPE 0.2228 (best 0.2228@75) 12.7 r/s since_best 0 left 474s
+[11:28:23] v2_cross round 100 choose RMSPE 0.2212 (best 0.2212@100) 13.4 r/s since_best 0 left 473s
+[11:28:24] v2_cross round 125 choose RMSPE 0.2204 (best 0.2204@125) 13.5 r/s since_best 0 left 471s
+[11:28:26] v2_cross round 150 choose RMSPE 0.2201 (best 0.2201@150) 13.3 r/s since_best 0 left 469s
+[11:28:29] v2_cross round 175 choose RMSPE 0.2199 (best 0.2199@175) 12.9 r/s since_best 0 left 466s
+[11:28:31] v2_cross round 200 choose RMSPE 0.2196 (best 0.2196@200) 12.4 r/s since_best 0 left 464s
+[11:28:34] v2_cross round 225 choose RMSPE 0.2195 (best 0.2195@225) 11.9 r/s since_best 0 left 461s
+[11:28:37] v2_cross round 250 choose RMSPE 0.2193 (best 0.2193@250) 11.5 r/s since_best 0 left 458s
+[11:28:40] v2_cross round 275 choose RMSPE 0.2191 (best 0.2191@275) 11.0 r/s since_best 0 left 455s
+[11:28:44] v2_cross round 300 choose RMSPE 0.2190 (best 0.2190@300) 10.6 r/s since_best 0 left 452s
+[11:28:47] v2_cross round 325 choose RMSPE 0.2189 (best 0.2189@325) 10.2 r/s since_best 0 left 448s
+[11:28:51] v2_cross round 350 choose RMSPE 0.2188 (best 0.2188@350) 9.8 r/s since_best 0 left 444s
+[11:28:58] v2_cross round 400 choose RMSPE 0.2188 (best 0.2188@400) 9.3 r/s since_best 0 left 437s
+[11:29:03] v2_cross round 425 choose RMSPE 0.2188 (best 0.2188@425) 9.0 r/s since_best 0 left 433s
+[11:29:07] v2_cross round 450 choose RMSPE 0.2188 (best 0.2188@450) 8.7 r/s since_best 0 left 428s
+[11:29:12] v2_cross round 475 choose RMSPE 0.2188 (best 0.2188@475) 8.4 r/s since_best 0 left 423s
+[11:29:17] v2_cross round 500 choose RMSPE 0.2187 (best 0.2187@500) 8.1 r/s since_best 0 left 419s
+[11:29:22] v2_cross round 525 choose RMSPE 0.2187 (best 0.2187@525) 7.9 r/s since_best 0 left 413s
+[11:29:27] v2_cross round 550 choose RMSPE 0.2187 (best 0.2187@550) 7.6 r/s since_best 0 left 408s
+[11:29:34] v2_cross round 575 choose RMSPE 0.2187 (best 0.2187@575) 7.3 r/s since_best 0 left 402s
+[11:29:40] v2_cross round 600 choose RMSPE 0.2187 (best 0.2187@600) 7.1 r/s since_best 0 left 395s
+[11:30:09] v2_cross round 700 choose RMSPE 0.2188 (best 0.2187@600) 6.1 r/s since_best 100 left 366s
+[11:30:47] v2_cross round 800 choose RMSPE 0.2189 (best 0.2187@600) 5.3 r/s since_best 200 left 328s
+[11:30:48] v2_cross FINAL {"variant": "v2_cross", "stop": "early_stop", "best_round": 600, "rounds": 800, "scalar": 0.9410914194480494, "choose_rmspe": 0.21865457054724838, "report_rmspe": 0.22189345718175701, "seconds": 152.5, "top_features": ["rv_w6", "rv_wap2", "rv_late300", "rv_all", "rv_grid1", "rv_late450", "stock_logrv_mean", "x_trade_size_sum_mean"]}

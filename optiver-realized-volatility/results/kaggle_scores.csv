@@ -1,0 +1,2 @@
+file,submitted_utc,description,status,public_score,private_score,source
+submission.csv,2026-10-12T12:17:17Z,"Blend: LightGBM + CNN (3 seeds) + set transformer (3 seeds); local report RMSPE 0.2057",COMPLETE,0.00000,0.24597,"submission listing of the competition, read after scoring finished"

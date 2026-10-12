@@ -1,0 +1,19 @@
+[11:35:34] start cpu=12 build_workers=10 cap=22.0min build<=7.0 nn<=11.0 gpu_frac=0.85
+[11:35:44] build 1/112 stocks 1% 8s eta 883s
+[11:35:57] build 9/112 stocks 8% 21s eta 242s
+[11:36:05] build 17/112 stocks 15% 29s eta 164s
+[11:36:13] build 25/112 stocks 22% 37s eta 130s
+[11:36:24] build 33/112 stocks 29% 48s eta 116s
+[11:36:34] build 41/112 stocks 37% 58s eta 100s
+[11:36:41] build 49/112 stocks 44% 65s eta 84s
+[11:36:47] build 57/112 stocks 51% 71s eta 69s
+[11:36:54] build 65/112 stocks 58% 78s eta 57s
+[11:36:59] build 73/112 stocks 65% 83s eta 44s
+[11:37:05] build 81/112 stocks 72% 89s eta 34s
+[11:37:11] build 89/112 stocks 79% 95s eta 25s
+[11:37:17] build 97/112 stocks 87% 101s eta 16s
+[11:37:20] build 105/112 stocks 94% 104s eta 7s
+[11:37:31] build 112/112 stocks 100% 115s eta 0s
+[11:37:41] features (428932, 119) built in 125s (seq=True)
+[11:37:41] build done at 127s; NN budget 11.0 min each
+[11:42:54] ALL DONE in 439.3s exit={'v3_s0': 0, 'v3_s1': 0, 'v3_s2': 0, 'v4_s0': 0, 'v4_s1': 0, 'v4_s2': 0}
