@@ -1,0 +1,11 @@
+14:50:14 prep loaded series=30490 days=1941 cores=4 smoke=False
+14:50:53 V1/V2 trained: [(0, 74, 63, 2, 3), (1, 106, 125, 3, 5), (2, 73, 61, 2, 3), (3, 84, 65, 2, 3), (4, 72, 72, 2, 3), (5, 48, 52, 2, 3), (6, 56, 60, 2, 3), (7, 126, 78, 3, 3), (8, 270, 218, 5, 7), (9, 119, 93, 3, 4)]
+14:51:35 V4 base trained in 86s
+14:51:47 aggregate model trained: best_iter 26, rows 4455256, elapsed 98s
+14:51:47 V1_lgb_squared: choose WRMSSE 0.6689 | report WRMSSE 0.7772 | per level [0.721, 0.701, 0.737, 0.738, 0.782, 0.734, 0.776, 0.768, 0.807, 0.867, 0.854, 0.842] | elapsed 98s
+14:51:47 V2_lgb_tweedie: choose WRMSSE 0.6617 | report WRMSSE 0.7938 | per level [0.761, 0.738, 0.77, 0.765, 0.793, 0.755, 0.783, 0.787, 0.812, 0.865, 0.854, 0.842] | elapsed 98s
+14:51:47 V3 alpha (choose) = 0.0
+14:51:47 V3_lgb_tweedie_reconciled: choose WRMSSE 0.6617 | report WRMSSE 0.7938 | per level [0.761, 0.738, 0.77, 0.765, 0.793, 0.755, 0.783, 0.787, 0.812, 0.865, 0.854, 0.842] | elapsed 98s
+14:51:47 V4_lagfree_aligned: choose WRMSSE 0.5856 | report WRMSSE 0.6791 | per level [0.502, 0.522, 0.609, 0.538, 0.604, 0.579, 0.637, 0.663, 0.719, 0.97, 0.923, 0.883] | elapsed 98s
+14:51:47 done 99s
+CPU_EXIT 0

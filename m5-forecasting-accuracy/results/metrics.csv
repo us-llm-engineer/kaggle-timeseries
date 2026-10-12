@@ -1,0 +1,6 @@
+variant,choose_wrmsse,report_wrmsse,alpha
+weekday_profile_baseline,0.643,0.7161,
+V1_lgb_squared,0.6689,0.7772,
+V2_lgb_tweedie,0.6617,0.7938,
+V3_lgb_tweedie_reconciled,0.6617,0.7938,0.0
+V4_lagfree_aligned,0.5856,0.6791,0.0

@@ -1,0 +1,2 @@
+submission,what_it_is,public_score,private_score,status
+submission_V4_lagfree_aligned.csv,V4 lag-free per-store LightGBM (alpha chosen 0: no alignment applied),0.67907,0.60711,complete after deadline

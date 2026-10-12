@@ -1,0 +1,21 @@
+calendar (1969, 14) | prices (6841121, 4) | sales_train_evaluation (30490, 1947) | sample_submission (60980, 29)
+series 30490, days 1941 (d_1..d_1941); items 3049, stores 10, depts 7, cats 3, states 3
+submission rows: 60980 = 2 x 30490 -> 30490 validation + 30490 evaluation; horizon F1..F28
+calendar date range 2011-01-29 2016-06-19 | days in calendar 1969 | event days 162 | SNAP CA/TX/WI days [650, 650, 650]
+negative sales: 0 | max daily unit sales 763 | mean 1.131 | median 0.0
+zero share of all (series,day) cells: 0.680; Syntetos-Boylan classes: {'erratic': 494, 'intermittent': 23075, 'lumpy': 5938, 'smooth': 983}
+series with first sale after d_1: 0.771; after d_1000: 0.162; never sold: 0; median first-sale day 159; share of series active in last 28 days: 0.973
+price coverage: share of (series,day) in the last 28 training days without a price: 0.000; dollar-sales concentration: top 1% of series = 0.154, top 10% = 0.488; share of series with zero dollar weight: 0.052
+total sales by weekday (1=Sat): {1: 41706, 2: 41304, 3: 32994, 4: 30500, 5: 30130, 6: 30321, 7: 34357}
+lowest total-sales days: [(697, '2012-12-25', 11), (331, '2011-12-25', 13), (1792, '2015-12-25', 14), (1427, '2014-12-25', 20), (1062, '2013-12-25', 20), (89, '2011-04-27', 17929)]
+FOODS sales ratio on SNAP vs non-SNAP days: {'CA': 1.102, 'TX': 1.156, 'WI': 1.3}
+mean daily total by year: {2011: 26280, 2012: 32955, 2013: 35988, 2014: 35862, 2015: 37810, 2016: 41835}
+aggregate series: 42840 (expected 42840)
+WRMSSE naive last day                             1.4639   per level: [1.49, 1.52, 1.53, 1.52, 1.61, 1.54, 1.61, 1.54, 1.56, 1.27, 1.21, 1.16]
+WRMSSE mean last 7                                1.1361   per level: [1.25, 1.21, 1.2, 1.23, 1.28, 1.2, 1.22, 1.16, 1.16, 0.94, 0.91, 0.88]
+WRMSSE mean last 28                               1.0823   per level: [1.16, 1.13, 1.12, 1.15, 1.21, 1.13, 1.16, 1.1, 1.11, 0.94, 0.9, 0.87]
+WRMSSE mean last 84                               1.0947   per level: [1.17, 1.13, 1.14, 1.16, 1.21, 1.14, 1.17, 1.12, 1.13, 0.98, 0.92, 0.87]
+WRMSSE seasonal naive (last 28 days repeated)     0.8377   per level: [0.63, 0.69, 0.75, 0.66, 0.76, 0.72, 0.8, 0.79, 0.88, 1.09, 1.13, 1.16]
+WRMSSE zero                                       5.4465   per level: [7.51, 6.88, 6.53, 7.21, 7.03, 6.49, 6.22, 5.91, 5.46, 2.72, 1.98, 1.41]
+WRMSSE mean last 28 x weekday profile (52 wk)     0.7161   per level: [0.59, 0.62, 0.67, 0.62, 0.7, 0.66, 0.72, 0.7, 0.76, 0.85, 0.85, 0.85]
+roles: fit = d_1..d_1885 (train), choose = d_1886..d_1913, report = d_1914..d_1941; d_1942..d_1969 (private evaluation period) has no labels in the data
