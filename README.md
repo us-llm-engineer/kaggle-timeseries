@@ -3,9 +3,10 @@
 Sequence and time-series projects from Kaggle competitions. Each project has its own folder with its code, tests, logs and
 figures, and its own detailed README.
 
-| Folder | Competition | Task | Best result (RMSE, ft) |
+| Folder | Competition | Task | Best result |
 | --- | --- | --- | --- |
-| [`rogii-wellbore-geology/`](rogii-wellbore-geology/) | [ROGII Wellbore Geology Prediction](https://www.kaggle.com/competitions/rogii-wellbore-geology-prediction) (2026) | Predict the stratigraphic depth (TVT) of a horizontal well beyond the last interpreted point, from gamma ray, trajectory and a vertical type well | **11.622 public / 11.980 private** |
+| [`rogii-wellbore-geology/`](rogii-wellbore-geology/) | [ROGII Wellbore Geology Prediction](https://www.kaggle.com/competitions/rogii-wellbore-geology-prediction) (2026) | Predict the stratigraphic depth (TVT) of a horizontal well beyond the last interpreted point, from gamma ray, trajectory and a vertical type well | **RMSE 11.622 public / 11.980 private (ft)** |
+| [`enefit-prosumer-energy/`](enefit-prosumer-energy/) | [Enefit - Predict Energy Behavior of Prosumers](https://www.kaggle.com/competitions/predict-energy-behavior-of-prosumers) (2023-24) | Day-ahead hourly solar production and consumption of 69 prosumer segments, from weather forecasts, capacity and a two-day-delayed target history | **MAE 56.6 kWh back-test** (not scored on Kaggle) |
 
 ---
 
@@ -274,6 +275,129 @@ batch 8), and LightGBM 4. The competition data is not redistributed here.
 15. ROGII. *ROGII Wellbore Geology Prediction.* Kaggle competition, 2026. https://www.kaggle.com/competitions/rogii-wellbore-geology-prediction
 
 The full list with what each paper contributed is in [`rogii-wellbore-geology/REFERENCES.md`](rogii-wellbore-geology/REFERENCES.md).
+
+---
+
+## Enefit prosumers: day-ahead forecasting with capacity-relative targets and a blended ensemble
+
+### The problem
+
+Enefit buys the imbalance of customers who both consume and generate (solar) electricity. The task is to forecast, every
+morning, the production and the consumption of each of 69 customer segments for every hour of the next day. The score
+is the plain mean absolute error over all rows, so the few large segments dominate it (ten of 69 carry 64 % of the
+absolute target). Three facts shape every model here:
+
+- the newest actual value a forecast may use is **two days old**, so the strongest simple baseline copies the same hour
+  of the previous week (105.3 kWh) or of two days ago (123.8 kWh);
+- production follows forecast radiation, with 35 % exact zeros at night;
+- installed capacity **doubled** (+110 %) during the training window, so the target level in the last month is outside
+  what trees saw in training.
+
+### Disclaimer on compute and on the result
+
+> Everything ran on **low-tier hardware**: gradient boosting on a multi-core CPU, and the neural networks on **one
+> NVIDIA T4** (single CPU core) for about **10 minutes** per run (about $0.35 of compute). The 8-member ensembles have
+> about 5 M parameters each.
+>
+> The numbers below are **back-test results on the last 60 days of the public training data**, not leaderboard scores.
+> The competition's API package is compiled for Python 3.10, the notebook runner now uses 3.13, and the competition
+> ended on 2024-04-30, so a submission could not be scored. The serving code passed a mock-API check instead.
+
+### Results
+
+| Model | What it is | Report MAE (kWh) | Production | Consumption |
+| --- | --- | --- | --- | --- |
+| same hour 48 h ago | baseline (newest legal value) | 123.8 | | |
+| same hour 168 h ago | baseline (matches the weekday) | 105.3 | | |
+| V2 | LightGBM, Tweedie, no target history | 99.1 | 66.9 | 131.4 |
+| V1 | LightGBM, L1 on capacity-relative targets, target lags | 63.6 | 70.3 | 56.9 |
+| V3 | TiDE-style network, capacity-relative | 61.3 | **62.1** | 60.5 |
+| V4 | TiDE-style network, window-normalised | 60.8 | 67.1 | **54.5** |
+| mean of V1, V3, V4 | blend | **56.6** | 60.3 | 52.9 |
+
+Report window 2023-04-02 to 2023-05-31 (190,224 rows), never used to choose anything; early stopping used the four
+weeks before it. Sources: [`results/backtest/`](enefit-prosumer-energy/results/backtest/),
+[`results/dl/`](enefit-prosumer-energy/results/dl/), [`results/post/by_target.csv`](enefit-prosumer-energy/results/post/by_target.csv).
+
+### Experiment history
+
+The first neural runs were wrong, not just weak: a layer normalisation over a single output feature is a constant, so the
+network ignored the weather (92.8 kWh, production 110). It was found because two dropout settings gave identical numbers,
+fixed, and is now guarded by a test. Full table with every run, its stop reason and its cost:
+[`enefit-prosumer-energy/README.md`](enefit-prosumer-energy/README.md#experiments).
+
+### Methodologies
+
+Full description of the features, the four models and the ensemble: [`enefit-prosumer-energy/docs/methodologies.md`](enefit-prosumer-energy/docs/methodologies.md).
+
+### Visualizations
+
+Every figure is regenerated by `python scripts/make_figures.py` from the files in
+[`enefit-prosumer-energy/results/`](enefit-prosumer-energy/results/).
+
+#### Architecture
+
+<p align="center"><img src="enefit-prosumer-energy/figures/arch_tide.png" width="100%" alt="TiDE-style forecaster diagram"></p>
+<p align="center"><sub>The network of V3 and V4. Source: <code>src/enefit13/nn_ens.py</code>.</sub></p>
+
+#### During training
+
+<table>
+<tr><td colspan="2"><img src="enefit-prosumer-energy/figures/train_dl_curves.png" width="100%"><br><sub>Held-out MAE per epoch for the eight members of each network (thin lines), their mean, the monitor-only report MAE, and the train loss with the cosine schedule. V4 members stop on plateau between epochs 24 and 43; V3 reaches its epoch cap while still improving. Source: <code>results/dl/run2_amp/*/*_history.json</code>.</sub></td></tr>
+<tr>
+<td width="50%"><img src="enefit-prosumer-energy/figures/train_gbdt_curves.png" width="100%"><br><sub>LightGBM fit and choose loss per round. The production booster stops at round 61 because the choose month has little sun. Source: <code>results/backtest/*/*_history.json</code>.</sub></td>
+<td width="50%"><img src="enefit-prosumer-energy/figures/train_gpu_efficiency.png" width="100%"><br><sub>T4 utilisation (mean 83 % fp32, 88 % fp16) and memory (about 2.4 of 15.4 GB). Source: <code>results/dl/*/gpu_utilisation.json</code>.</sub></td>
+</tr>
+</table>
+
+#### After training
+
+<table>
+<tr>
+<td width="50%"><img src="enefit-prosumer-energy/figures/post_method_comparison.png" width="100%"><br><sub>Every model against the baselines, overall and per target. Source: <code>results/post/by_target.csv</code>.</sub></td>
+<td width="50%"><img src="enefit-prosumer-energy/figures/post_error_by_hour.png" width="100%"><br><sub>Production error and bias by hour. At 13:00 V1 under-predicts by 133 kWh on average, V3 by 5 and V4 by 20. Source: <code>results/post/by_hour.csv</code>.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="enefit-prosumer-energy/figures/post_weekly.png" width="100%"><br><sub>Weekly MAE through the report window. Source: <code>results/post/by_week.csv</code>.</sub></td>
+<td width="50%"><img src="enefit-prosumer-energy/figures/post_per_unit.png" width="100%"><br><sub>Unit MAE against unit size: error grows with size and the largest segments set the metric. Source: <code>results/post/by_unit.csv</code>.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="enefit-prosumer-energy/figures/post_disagreement.png" width="100%"><br><sub>Disagreement between the model families and the correlation of their errors (0.68 to 0.85). Sources: <code>results/post/disagreement_by_hour.csv</code>, <code>error_correlation.csv</code>.</sub></td>
+<td width="50%"></td>
+</tr>
+</table>
+
+### Reproducing
+
+See [`enefit-prosumer-energy/README.md`](enefit-prosumer-energy/README.md) for every command. In short:
+
+```bash
+cd enefit-prosumer-energy
+pip install -r requirements.txt
+python -m pytest tests -q                          # leakage mutants, input-influence probe
+python scripts/data_profile.py                     # data profile and baselines
+python src/run_variant.py --variant v1 --root data --out results/backtest
+python src/prep_dl.py --root data --out prep && python src/run_dl_ens.py --prep prep --out results/dl --variants v3,v4
+python scripts/make_figures.py
+```
+
+Requirements: Python 3.12, LightGBM 4, PyTorch 2 with CUDA (a 16 GB T4 is enough; the ensembles use 2.4 GB). The
+competition data is not redistributed here.
+
+### Limitations
+
+- A single 60-day origin, no confidence intervals: differences below about 1 kWh between V3 and V4 are not a ranking.
+- Not scored on Kaggle (see the disclaimer), so there is no leaderboard comparison.
+- V3 was still improving at its epoch cap; the same-season tuning of the LightGBM models was implemented but not run.
+
+### References
+
+1. I. Nasios, K. Vogklis. *Blending gradient boosted trees and neural networks for point and probabilistic forecasting of hierarchical time series.* arXiv:2310.13029, 2023.
+2. A. Das, W. Kong, A. Leach, S. Mathur, R. Sen, R. Yu. *Long-term Forecasting with TiDE: Time-series Dense Encoder.* arXiv:2304.08424, 2023.
+3. Y. Liu, H. Wu, J. Wang, M. Long. *Non-stationary Transformers: Exploring the Stationarity in Time Series Forecasting.* arXiv:2205.14415, 2022.
+4. G. Ke, Q. Meng, T. Finley, T. Wang et al. *LightGBM: A Highly Efficient Gradient Boosting Decision Tree.* NeurIPS 2017.
+
+Others that were studied are listed in [`enefit-prosumer-energy/REFERENCES.md`](enefit-prosumer-energy/REFERENCES.md).
 
 ### License
 
