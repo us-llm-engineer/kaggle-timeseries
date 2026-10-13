@@ -28,3 +28,19 @@ def test_scorer_perfect_is_zero_and_matches_reference(d):
     W = WRMSSE(d.meta, d.D[:, :1885].astype(np.float64), dollars(d.P, d.D, 1858, 1885))
     pred = d.D[:, 1857:1885].astype(np.float64)
     assert abs(W.score(s.y, pred) - s.score(pred)) < 1e-9
+
+def test_gpu_scorer_equals_numpy(d):
+    torch = pytest.importorskip("torch")
+    if not torch.cuda.is_available(): pytest.skip("no cuda")
+    from gpu_member import Data, wrmsse_t
+    dat = Data(d, torch.device("cuda")); s = Scorer(d, "choose"); pred = d.D[:, 1857:1885].astype(np.float32)
+    got = float(wrmsse_t(dat, torch.tensor(pred, device="cuda"), torch.tensor(s.y, dtype=torch.float32, device="cuda"), "choose"))
+    assert abs(got - s.score(pred.astype(np.float64))) < 2e-3
+
+def test_neural_batch_ignores_days_after_origin(d):
+    torch = pytest.importorskip("torch")
+    if not torch.cuda.is_available(): pytest.skip("no cuda")
+    from gpu_member import Data
+    dat = Data(d, torch.device("cuda")); x1, s1 = dat.batch(1500)
+    dat.D[:, 1500:] = 500; x2, s2 = dat.batch(1500)
+    assert torch.allclose(x1, x2) and torch.allclose(s1, s2)

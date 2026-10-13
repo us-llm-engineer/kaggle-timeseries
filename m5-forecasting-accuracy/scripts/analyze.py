@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from m5lib import *
 
 ap = argparse.ArgumentParser(); ap.add_argument("--preds", default="results/preds"); ap.add_argument("--out", default="results"); ap.add_argument("--log", default="results/cpu_run.log"); a = ap.parse_args()
-V = ["V1_lgb_squared", "V2_lgb_tweedie", "V3_lgb_tweedie_reconciled", "V4_lagfree_aligned"]
+V = ["V1_lgb_squared", "V2_lgb_tweedie", "V3_lgb_tweedie_reconciled", "V4_lagfree_aligned", "V5_hl_mixer_ens", "V6_hurdle_mixer_ens"]
 d = load_prep(); sc = {r: Scorer(d, r) for r in ("choose", "report")}
 # reference forecast: mean of the last 28 days times the weekday profile of the last 52 weeks
 def weekday_profile(role):

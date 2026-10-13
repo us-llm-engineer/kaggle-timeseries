@@ -4,3 +4,4 @@ scipy>=1.11
 lightgbm>=4.0
 matplotlib>=3.8
 pytest>=8.0
+torch>=2.1
