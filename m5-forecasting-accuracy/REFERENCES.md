@@ -11,3 +11,8 @@ Read and not used in the published variants:
 
 5. O. Sprangers, W. Wadman, S. Schelter, M. de Rijke. *Hierarchical Forecasting at Scale.* arXiv:2310.12809. Sparse hierarchical loss for a global model; it needs a loss over all 12 levels, which the tree models here do not optimise.
 6. R. Musat, A. Cabuz. *Switch-Hurdle: A MoE Encoder with AR Hurdle Decoder for Intermittent Demand Forecasting.* arXiv:2602.22685. The paper does not state which WRMSSE levels, window or scaling it uses, so its M5 number cannot be compared with ours.
+
+Read for the neural variants (V5 and V6):
+
+7. Sprangers et al. (item 5) supplies the exact weighted loss over all 12 levels in spirit: here the hierarchical loss is the weighted RMSSE itself, evaluated on the GPU through a sparse summation matrix, rather than the paper's smoothed gradient form.
+8. Musat and Cabuz (item 6) motivates the hurdle head of V6; the paper reports no ablation of the head on M5 and omits width, depth and optimiser settings, so V6 is inspired by it, not a replication.

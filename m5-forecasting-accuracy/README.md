@@ -1,7 +1,7 @@
 # M5 Forecasting - Accuracy: method, experiments and how to reproduce
 
 A summary with all figures is in the [main README](../README.md). This file has the details: the data, the fixed roles,
-the four variants, the numbers, the Kaggle scoring and the exact commands.
+the six variants, the numbers, the Kaggle scoring and the exact commands.
 
 ## Folder map
 
@@ -9,12 +9,13 @@ the four variants, the numbers, the Kaggle scoring and the exact commands.
 | --- | --- |
 | `src/m5lib.py` | Compact array file from the competition files, the exact 12-level WRMSSE (`WRMSSE`, `Scorer`), cumulative-sum tables for trailing-window statistics (`Hist`), the feature builder (`features`), training-cell sampling and the ratio alignment (`align`). |
 | `src/cpu_variants.py` | V1 to V4 and the aggregate-level model: per-store LightGBM runs in a process pool, early stopping on the *choose* window, forecasts for the three origins, the alignment choice, atomic history file. |
+| `src/gpu_member.py`, `src/run_gpu.py` | V5 and V6: one neural ensemble member trained on the GPU with the exact 12-level loss, and the launcher that runs six members as separate processes beside a utilisation sampler. |
 | `scripts/build_prep.py` | Builds `prep/m5_prep.npz` (about 40 MB) from the competition files and caches the WRMSSE scale and weights. |
 | `scripts/analyze.py` | Turns the saved forecasts into the aggregate tables in `results/`. |
 | `scripts/make_figures.py` | Draws the six figures from those tables. |
 | `scripts/make_submission.py` | Writes the Kaggle CSV of one variant. |
 | `tests/test_m5.py` | Leak test with a mutant (corrupting every day from the origin on must not change any feature), a check that training cells end by the last fit day, the alignment identity, and a check that the scorer is zero for a perfect forecast and equals the reference WRMSSE class. |
-| `results/` | `metrics.csv`, `per_level.csv`, `aggregate_model_per_level.csv`, `per_horizon.csv`, `bias_total.csv`, `bias_by_volume.csv`, `store_iterations.csv`, `cpu_history.json`, `cpu_run.log`, `data_profile.txt`, `kaggle_scores.csv`, `leaderboard.png`. The per-series forecasts are not published. |
+| `results/` | `metrics.csv`, `per_level.csv`, `aggregate_model_per_level.csv`, `gpu/` (per-step histories of the six members, ensemble scores, utilisation summary), `per_horizon.csv`, `bias_total.csv`, `bias_by_volume.csv`, `store_iterations.csv`, `cpu_history.json`, `cpu_run.log`, `data_profile.txt`, `kaggle_scores.csv`, `leaderboard.png`. The per-series forecasts are not published. |
 | `figures/` | The six figures shown in the main README. |
 
 ## The task and the data
@@ -86,6 +87,13 @@ chosen on the *choose* window. **The choose window picked alpha = 0 again, so V4
 aggregate model did not influence any published forecast.** The Kaggle file is named `..._lagfree_aligned` after the design,
 not the outcome.
 
+**V5: hierarchical-loss mixer (GPU).** An MLP (3 hidden blocks of 512, LayerNorm, GELU, dropout 0.2; embeddings of item, department, category, store, state; 0.91 M parameters) over a
+tensor of the last 112 days of one series divided by one plus its 28-day mean, the 28 target days' calendar, benefit-day and price features, and the series' age and recency. One
+step feeds all 30,490 series at two random origins, and the loss is the **exact weighted RMSSE over all 12 levels** (the 42,840 series come from a sparse summation matrix on the
+GPU) plus a scaled squared error of the bottom series with weight 0.5. The output is `scale x softplus(...)` for the 28 days. AdamW 2e-3 with a cosine schedule, bf16, 20 minutes
+per member; three seeds averaged. Selection is the best choose score along the run. **V6** is the same network with a hurdle head: a probability of a positive sale and a mean
+for the positive part, trained with a binary cross-entropy and a Huber loss on positive cells; the forecast is probability x mean.
+
 ## Results
 
 | Model | What it is | Choose WRMSSE | Report WRMSSE |
@@ -98,7 +106,7 @@ not the outcome.
 
 Per-level report numbers are in [`results/per_level.csv`](results/per_level.csv). Observations that the tables support:
 
-- Only V4 beats the baseline, on both windows. V1 to V3 are worse than the baseline on both (0.662 to 0.669 against 0.643 on *choose*, 0.777 to 0.794 against 0.716 on *report*).
+- The two neural ensembles score close to V1 on *choose* (0.632 and 0.643) and worse on *report*; only V4 beats the baseline on both windows. V1 to V3 are worse than the baseline on both (0.662 to 0.669 against 0.643 on *choose*, 0.777 to 0.794 against 0.716 on *report*).
 - V4 wins at the aggregate levels (0.50 at the total, 0.72 at store by department) and loses at the three item levels (0.97, 0.92 and 0.88 against 0.87, 0.85 and 0.84 for V1); there the baseline scores 0.85.
 - The Tweedie loss was worse than the squared loss on the report window (0.794 against 0.777) and better on *choose* (0.662 against 0.669); one 28-day window per role cannot separate them.
 - Every model forecasts too little in total over the report window (sum of forecasts over sum of actuals 0.93 for V1, 0.92 for V2, 0.96 for V4 and the baseline), and every model, the baseline included, has its largest daily error on forecast day 21 (V4 1.27, baseline 1.16).
@@ -112,12 +120,14 @@ from origin 1941):
 
 | Column | Value |
 | --- | --- |
-| Public score (d_1914 to d_1941, the *report* window) | **0.67907** |
-| Private score (d_1942 to d_1969) | **0.60711** |
-| Local report WRMSSE | 0.6791 |
+| Submission | Public (report window) | Private (d_1942 to d_1969) | Local report |
+| --- | --- | --- | --- |
+| V4 | **0.67907** | **0.60711** | 0.6791 |
+| V5 | 0.79857 | 0.68162 | 0.7986 |
+| V6 | 0.82012 | 0.61012 | 0.8202 |
 
-The public score equals the local report-window score to four digits, which confirms that `Scorer` reproduces the
-competition's WRMSSE. The model scores lower (better) on the private window than on the public one. Sources:
+The public score equals the local report-window score to four digits for all three files, which confirms that `Scorer` reproduces the
+competition's WRMSSE. Every model scores lower (better) on the private window than on the public one, and the spread between V4 and V6 almost vanishes there (0.607 against 0.610). Sources:
 [`results/kaggle_scores.csv`](results/kaggle_scores.csv) and [`results/leaderboard.png`](results/leaderboard.png).
 
 ## Experiment notes
@@ -137,10 +147,22 @@ competition's WRMSSE. The model scores lower (better) on the private window than
   evidence about reconciliation to a good aggregate forecast.
 - A mutant test (corrupting all days from the origin on) found no feature that reads the future.
 
+## Why deep learning did not work well on this dataset
+
+Measured here (tables in `results/`, histories in `results/gpu/`); the mechanisms are reasoned from those measurements and were not isolated by separate ablations.
+
+- **Few effective samples, one dominant window shift.** There are 1,885 training days per series and consecutive 28-day windows differ strongly: the weekday-profile baseline alone scores 0.63 to 1.18 on successive windows. A network trained to minimise the loss over all earlier origins and stopped on one 28-day window picks a checkpoint tuned to that window: the six members' report/choose ratios are 1.17 to 1.34 (V5 ensemble 1.24, V6 1.30, V4 1.16), and along a run the choose and report scores correlate 0.75 to 0.95 over the whole run but only 0.30 to 0.77 from step 1000 on (computed from the six histories).
+- **Time-limited, not overfitted, and seeds add little.** The best choose step lies at 2,300 to 3,000 of 3,200 to 3,300 with the learning rate already near zero, and the train-origin score was never better than the choose score (train-minus-choose gap -0.05 to -0.12). V5's three-seed ensemble (0.6427) is no better than its best single member (0.641); V6's gains 0.006 over its best member.
+- **Aggregates are where the metric is, and they are the weak side.** Nine of the 12 levels are aggregates. V5 and V6 score 0.74 to 0.85 there on the report window; the lag-free trees V4 score 0.50 to 0.72. The summed-bottom forecasts of the networks under-forecast the total in the middle of the horizon (in the third week of the window the sum of forecasts is about 0.88 and 0.89 of the actual for V5 and V6, measured on weekly sums; the daily ratios are in `results/bias_total.csv`).
+- **Sparse, restarting series are shrunk toward zero.** In the lowest-volume decile of series the networks forecast 0.27 (V5) and 0.33 (V6) of the actual sales, against 0.45 to 0.55 for the tree models; a squared-error type loss on a mostly-zero target is minimised by a small mean. The hurdle head did not repair this and its report score is the worst of all variants.
+- **Little use of covariates.** In two further runs of the same V5 configuration (selection windows shifted by 28 days, `results/gpu/phaseA_control/`, with a probe recorded at every evaluation), permuting the price block across series changes the V5 forecast by about 1 % and the benefit-day block by under 1 %, while permuting the history block changes it by about 50 % (`mon.input_influence`). The calendar effect enters through the shared target-day features, which a permutation across series cannot probe.
+- **Cost.** Each member needs a GPU (about 2.7 steps per second with six members sharing one L4, 20 minutes); the full per-store tree stage of V1 to V4 takes 98 seconds on four CPU cores and V4 is better.
+- **A deliberate reading of the private window:** V6's private score (0.610) is far better than its public score (0.820) while V5's is not (0.682); with one window per role this is not evidence that the hurdle head is better, only that the private window is easier for models that under-forecast the busy weeks less.
+
 ## Compute
 
 V1 to V4 and the aggregate model ran in **98 s** on a **4-core, 16 GiB cloud CPU sandbox** (two stores in parallel with two
-threads each); no GPU was used. Building the array file takes about 80 s on a workstation.
+threads each). V5 and V6 ran as six processes (three seeds each) on **one NVIDIA L4** for 20 minutes: mean GPU utilisation 94.3 % (93 % of the 5-second samples at or above 80 %), peak memory 15.9 GiB of 22 GiB ([`results/gpu/gpu_utilisation_summary.json`](results/gpu/gpu_utilisation_summary.json)). Building the array file takes about 80 s on a workstation.
 
 ## Reproducing
 
@@ -153,9 +175,10 @@ python -m pytest tests -q
 python src/cpu_variants.py --cores 4 | tee results/cpu_run.log   # results/preds/*.npy, results/cpu_history.json
 python scripts/analyze.py && python scripts/make_figures.py
 python scripts/make_submission.py --variant V4_lagfree_aligned
+python src/run_gpu.py --members 6 --budget-min 20 --n-orig 2        # V5 and V6, one GPU with 16 GiB or more
 ```
 
-Requirements: Python 3.11 or newer, LightGBM 4, 16 GiB of memory for the aggregate model. The competition data is not
+Requirements: Python 3.11 or newer, LightGBM 4, PyTorch 2 with CUDA for V5 and V6, 16 GiB of memory for the aggregate model. The competition data is not
 redistributed here.
 
 ## Limitations
@@ -164,4 +187,5 @@ redistributed here.
 - The models are not refitted for later origins; the private window is forecast with weights fitted by d_1885.
 - The alignment and reconciliation steps both came out as no-ops because the aggregate-level model behind them was defective (see the experiment notes); neither idea has been tested with a working aggregate model.
 - V4 has no recent-demand information at all besides the item code, so it cannot follow a series whose level has just changed.
-- Two neural variants trained on a GPU are not part of this folder.
+- The neural ensembles were not tuned (one architecture, one learning-rate schedule, three seeds) and a larger or better-regularised network might do better; the section above reports what these runs show, not a limit of the method.
+- Per-series forecasts of V5 and V6 are not published; the aggregate tables are produced from them by `scripts/analyze.py`.

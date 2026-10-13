@@ -8,7 +8,7 @@ figures, and its own detailed README.
 | [`rogii-wellbore-geology/`](rogii-wellbore-geology/) | [ROGII Wellbore Geology Prediction](https://www.kaggle.com/competitions/rogii-wellbore-geology-prediction) (2026) | Predict the stratigraphic depth (TVT) of a horizontal well beyond the last interpreted point, from gamma ray, trajectory and a vertical type well | **RMSE 11.622 public / 11.980 private (ft)** |
 | [`enefit-prosumer-energy/`](enefit-prosumer-energy/) | [Enefit - Predict Energy Behavior of Prosumers](https://www.kaggle.com/competitions/predict-energy-behavior-of-prosumers) (2023-24) | Day-ahead hourly solar production and consumption of 69 prosumer segments, from weather forecasts, capacity and a two-day-delayed target history | **MAE 56.6 kWh back-test** (not scored on Kaggle) |
 | [`optiver-realized-volatility/`](optiver-realized-volatility/) | [Optiver Realized Volatility Prediction](https://www.kaggle.com/competitions/optiver-realized-volatility-prediction) (2021-22) | Realised volatility of the next ten minutes of 112 stocks, from one-second order-book and trade data of the current window | **RMSPE 0.2057 local report**; Kaggle private 0.24597 (late submission; the public column shows an implausible 0.0, see below) |
-| [`m5-forecasting-accuracy/`](m5-forecasting-accuracy/) | [M5 Forecasting - Accuracy](https://www.kaggle.com/competitions/m5-forecasting-accuracy) (2020) | Daily unit sales of 30,490 item-store series for the next 28 days, scored by WRMSSE over 12 aggregation levels, from calendar, SNAP days and prices | **WRMSSE 0.67907 public / 0.60711 private** (late submission) |
+| [`m5-forecasting-accuracy/`](m5-forecasting-accuracy/) | [M5 Forecasting - Accuracy](https://www.kaggle.com/competitions/m5-forecasting-accuracy) (2020) | Daily unit sales of 30,490 item-store series for the next 28 days, scored by WRMSSE over 12 aggregation levels, from calendar, SNAP days and prices | **WRMSSE 0.67907 public / 0.60711 private** (late submission, V4); neural V5 and V6: 0.79857 / 0.68162 and 0.82012 / 0.61012 |
 
 ---
 
@@ -538,7 +538,7 @@ competition data is not redistributed here.
 
 Others that were read are listed in [`optiver-realized-volatility/REFERENCES.md`](optiver-realized-volatility/REFERENCES.md).
 
-## M5 forecasting accuracy: per-store gradient boosting, with and without lag features
+## M5 forecasting accuracy: per-store gradient boosting with and without lag features, and two neural ensembles
 
 ### The problem
 
@@ -555,8 +555,8 @@ Five facts shape every model here:
 
 ### Disclaimer on compute and on the result
 
-> The four variants ran on a **4-core, 16 GiB cloud CPU sandbox** in 98 s, with no GPU. The result is a **single-origin
-> forecast per role** (28 days each) without confidence intervals.
+> V1 to V4 ran on a **4-core, 16 GiB cloud CPU sandbox** in 98 s; V5 and V6 (6 processes, 3 seeds each) ran 20 minutes on **one NVIDIA L4**
+> at 94 % mean utilisation. The result is a **single-origin forecast per role** (28 days each) without confidence intervals.
 >
 > Only V4 beats the weekday-profile baseline. V1 to V3 are worse than it on both windows, and the reconciliation and
 > alignment steps both came out as no-ops (the strength chosen on the choose window was 0) because the aggregate-level model
@@ -564,11 +564,13 @@ Five facts shape every model here:
 
 ### Leaderboard
 
-<p align="center"><img src="m5-forecasting-accuracy/results/leaderboard.png" width="640" alt="Kaggle leaderboard: submission_V4_lagfree_aligned private 0.60711 public 0.67907, complete after deadline"></p>
+<p align="center"><img src="m5-forecasting-accuracy/results/leaderboard.png" width="640" alt="Kaggle submissions: V6 private 0.61012 public 0.82012; V5 private 0.68162 public 0.79857; V4 private 0.60711 public 0.67907"></p>
 
 | Submission | What it is | Choose | Report | Public | Private |
 | --- | --- | --- | --- | --- | --- |
 | `submission_V4_lagfree_aligned` | lag-free per-store LightGBM (alignment strength chosen 0) | 0.5856 | 0.6791 | **0.67907** | **0.60711** |
+| `submission_V5_hl_mixer_ens` | hierarchical-loss MLP, 3 seeds | 0.6427 | 0.7986 | 0.79857 | 0.68162 |
+| `submission_V6_hurdle_mixer_ens` | hurdle MLP, 3 seeds | 0.6316 | 0.8202 | 0.82012 | 0.61012 |
 
 The CSV was submitted after the deadline. The public window is the report window, and the public score equals the local
 report score to four digits, so the local scorer reproduces the competition's. Source:
@@ -583,6 +585,8 @@ report score to four digits, so the local scorer reproduces the competition's. S
 | V2 | the same with the Tweedie loss | 0.6617 | 0.7938 |
 | V3 | V2 reconciled to a scaled aggregate-level model (strength chosen 0, so equal to V2) | 0.6617 | 0.7938 |
 | V4 | lag-free per-store LightGBM on calendar, price and item codes (alignment strength chosen 0) | **0.5856** | **0.6791** |
+| V5 | hierarchical-loss MLP over 112 days of scaled history, loss on all 12 levels, 3 seeds | 0.6427 | 0.7986 |
+| V6 | the same with a hurdle head, 3 seeds | 0.6316 | 0.8202 |
 
 Fit on targets up to d_1885; *choose* = d_1886 to d_1913, *report* = d_1914 to d_1941, both forecast from the fitted models
 without refitting. Sources: [`results/metrics.csv`](m5-forecasting-accuracy/results/metrics.csv),
@@ -597,9 +601,18 @@ without refitting. Sources: [`results/metrics.csv`](m5-forecasting-accuracy/resu
 
 Full notes: [`m5-forecasting-accuracy/README.md`](m5-forecasting-accuracy/README.md#experiment-notes).
 
+### Why deep learning did not work well here
+
+- The neural ensembles match the trees on the selection window but degrade much more on the next one (report/choose 1.24 and 1.30 against 1.16): with 1,885 days per series and strongly different consecutive windows, stopping on one window is a noisy choice.
+- They were time-limited rather than overfitted, and extra seeds added little (0.6427 against 0.641 for V5).
+- They are weakest at the nine aggregate levels that carry most of the metric (0.74 to 0.85 against 0.50 to 0.72 for the lag-free trees), under-forecast the mid-horizon total by 11 to 12 %, and shrink the lowest-volume series to 0.27 to 0.33 of actual sales.
+- They barely use price or benefit-day inputs (about 1 % output change when permuted) and cost 20 minutes of a GPU against 98 seconds of four CPU cores for V1 to V4.
+
+Details and caveats: [`m5-forecasting-accuracy/README.md`](m5-forecasting-accuracy/README.md#why-deep-learning-did-not-work-well-on-this-dataset).
+
 ### Methodologies
 
-The four variants, the fixed roles and the score are described in
+The six variants, the fixed roles and the score are described in
 [`m5-forecasting-accuracy/README.md`](m5-forecasting-accuracy/README.md#the-four-variants).
 
 ### Visualizations
@@ -622,6 +635,7 @@ Every figure is regenerated by `python scripts/make_figures.py` from the files i
 <td width="50%"><img src="m5-forecasting-accuracy/figures/fig5_bias_by_volume.png" width="100%"><br><sub>The same ratio by sales-volume decile of the item-store series: V2 forecasts 0.45 of the actual in the lowest decile, V4 forecasts 1.2 to 1.5 times the actual in the three lowest. Source: <code>results/bias_by_volume.csv</code>.</sub></td>
 <td width="50%"><img src="m5-forecasting-accuracy/figures/fig6_trees_per_store.png" width="100%"><br><sub>Trees kept by early stopping on the choose window, per store: 48 to 270 for V1 and 52 to 218 for V2. Source: <code>results/store_iterations.csv</code>.</sub></td>
 </tr>
+<tr><td colspan="2"><img src="m5-forecasting-accuracy/figures/fig7_neural_training.png" width="100%"><br><sub>Choose (left) and report (right, monitor only) WRMSSE per training step of the six neural members; the dotted line is the weekday baseline on the report window. The report curves lag and scatter more than the choose curves. Source: <code>results/gpu/*_history.json</code>.</sub></td></tr>
 </table>
 
 ### Reproducing
@@ -634,6 +648,7 @@ pip install -r requirements.txt
 export M5_DATA_DIR=/path/to/m5-forecasting-accuracy
 python scripts/build_prep.py && python -m pytest tests -q
 python src/cpu_variants.py --cores 4 | tee results/cpu_run.log
+python src/run_gpu.py --members 6 --budget-min 20 --n-orig 2   # V5 and V6, needs a CUDA GPU
 python scripts/analyze.py && python scripts/make_figures.py
 ```
 
@@ -646,7 +661,7 @@ redistributed here.
 - The models are not refitted for the later forecast origins.
 - Reconciliation and alignment came out as no-ops because the aggregate model behind them was defective; they remain untested.
 - V4 has no recent-demand information besides the item code.
-- Two neural variants trained on a GPU are not part of this folder.
+- The neural ensembles were not tuned; they show what one untuned architecture does on this data, not a limit of the method.
 
 ### References
 
