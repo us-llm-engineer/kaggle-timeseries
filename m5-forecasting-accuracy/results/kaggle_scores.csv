@@ -1,2 +1,4 @@
 submission,what_it_is,public_score,private_score,status
-submission_V4_lagfree_aligned.csv,V4 lag-free per-store LightGBM (alpha chosen 0: no alignment applied),0.67907,0.60711,complete after deadline
+submission_V4_lagfree_aligned.csv,V4 lag-free per-store LightGBM (alignment strength chosen 0),0.67907,0.60711,complete after deadline
+submission_V5_hl_mixer_ens.csv,V5 hierarchical-loss mixer 3-seed ensemble,0.79857,0.68162,complete after deadline
+submission_V6_hurdle_mixer_ens.csv,V6 hurdle mixer 3-seed ensemble,0.82012,0.61012,complete after deadline
